@@ -94,6 +94,7 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": "/SKILL.md",
         "args": "$ARGUMENTS",
         "rules_dir": ".codebuddy/rules",
+        "rules_strategy": "native",
         "context_file": "CODEBUDDY.md",
         "commands_dir": ".codebuddy/commands",
         "agents_dir": ".codebuddy/agents",
@@ -108,7 +109,8 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "format": "skill",
         "extension": "/SKILL.md",
         "args": "$ARGUMENTS",
-        "rules_dir": None,
+        "rules_dir": ".claude/rules",        # 修正: Claude 原生支持 .claude/rules/
+        "rules_strategy": "native",
         "claude_inject": True,
         "context_file": "CLAUDE.md",
         "commands_dir": ".claude/commands",
@@ -124,10 +126,11 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "format": "skill",
         "extension": "/SKILL.md",
         "args": "$ARGUMENTS",
-        "rules_dir": None,
+        "rules_dir": None,                       # 没有 rules 目录
+        "rules_strategy": "agents-md",            # 规则合并到 AGENTS.md(它的 context 就是 AGENTS.md)
         "context_file": "AGENTS.md",
-        "commands_dir": None,                    # codex 没有独立 commands
-        "agents_dir": None,                      # .agents/ 就是 skill 父目录,无独立子代理
+        "commands_dir": None,
+        "agents_dir": None,
         "mcp_file": ".codex/config.toml",
         "mcp_format": "toml",
         "mcp_key": "mcp_servers",
@@ -140,6 +143,7 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": "/SKILL.md",
         "args": "$ARGUMENTS",
         "rules_dir": ".cursor/rules",
+        "rules_strategy": "native",
         "context_file": ".cursor/rules/specify-rules.mdc",
         "commands_dir": ".cursor/commands",
         "agents_dir": ".cursor/subagents",
@@ -155,8 +159,9 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".md",
         "args": "$ARGUMENTS",
         "rules_dir": None,
+        "rules_strategy": "import-agents-md",     # AGENTS.md 合并 + QWEN.md 添加 @AGENTS.md
         "context_file": "QWEN.md",
-        "commands_dir": ".qwen/commands",        # 与 skill dir 相同
+        "commands_dir": ".qwen/commands",
         "agents_dir": None,
         "mcp_file": ".qwen/mcp.json",
         "mcp_format": "json",
@@ -170,6 +175,7 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".md",
         "args": "$ARGUMENTS",
         "rules_dir": None,
+        "rules_strategy": "import-agents-md",
         "context_file": "IFLOW.md",
         "commands_dir": ".iflow/commands",
         "agents_dir": None,
@@ -185,6 +191,7 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".md",
         "args": "$ARGUMENTS",
         "rules_dir": ".roo/rules",
+        "rules_strategy": "native",
         "context_file": ".roo/rules/specify-rules.md",
         "commands_dir": ".roo/commands",
         "agents_dir": None,
@@ -200,6 +207,7 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".md",
         "args": "$ARGUMENTS",
         "rules_dir": ".windsurf/rules",
+        "rules_strategy": "native",
         "context_file": ".windsurf/rules/specify-rules.md",
         "commands_dir": ".windsurf/workflows",
         "agents_dir": None,
@@ -215,10 +223,12 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".agent.md",
         "args": "$ARGUMENTS",
         "rules_dir": None,
+        "rules_strategy": "instructions",         # .github/instructions/<name>.instructions.md
+        "instructions_dir": ".github/instructions",
         "copilot_companion": True,
         "context_file": ".github/copilot-instructions.md",
         "commands_dir": ".github/prompts",
-        "agents_dir": ".github/agents",          # 与 skill dir 相同
+        "agents_dir": ".github/agents",
         "mcp_file": ".github/.mcp.json",
         "mcp_format": "json",
         "mcp_key": "mcpServers",
@@ -231,13 +241,14 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "extension": ".toml",
         "args": "{{args}}",
         "rules_dir": None,
+        "rules_strategy": "import-agents-md",
         "context_file": "GEMINI.md",
-        "commands_dir": ".gemini/commands",      # 与 skill dir 相同
+        "commands_dir": ".gemini/commands",
         "agents_dir": None,
-        "mcp_file": ".gemini/settings.json",     # gemini 的 mcp 嵌在 settings.json 里
+        "mcp_file": ".gemini/settings.json",
         "mcp_format": "json",
         "mcp_key": "mcpServers",
-        "settings_file": None,                   # 不再单独同步,避免和 mcp_file 冲突
+        "settings_file": None,
     },
 }
 
@@ -534,12 +545,18 @@ def _discover_rules(agent_key: str, root: Path) -> List[Path]:
 # 写入器
 # ----------------------------------------------------------------------------
 class Writer:
-    def __init__(self, dst_root: Path, dry_run: bool = False) -> None:
+    def __init__(self, dst_root: Path, dry_run: bool = False, verbose: bool = False) -> None:
         self.dst_root = dst_root
         self.dry_run = dry_run
+        self.verbose = verbose
         self.created: List[Path] = []
+        # 分类计数 (write/copy 各算一次)
+        self.write_count = 0
+        self.copy_count = 0
 
     def _log(self, action: str, path: Path) -> None:
+        if not self.verbose:
+            return
         try:
             rel = path.relative_to(self.dst_root)
         except Exception:
@@ -548,19 +565,29 @@ class Writer:
 
     def write_text(self, dest: Path, content: str) -> None:
         if self.dry_run:
-            self._log("WOULD-WRITE", dest); return
+            self._log("WOULD-WRITE", dest); self.write_count += 1; return
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(content.replace("\r\n", "\n").encode("utf-8"))
         self.created.append(dest)
+        self.write_count += 1
         self._log("WRITE", dest)
 
     def copy_file(self, src: Path, dest: Path) -> None:
         if self.dry_run:
-            self._log("WOULD-COPY", dest); return
+            self._log("WOULD-COPY", dest); self.copy_count += 1; return
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
         self.created.append(dest)
+        self.copy_count += 1
         self._log("COPY", dest)
+
+    def snapshot(self) -> Tuple[int, int, int]:
+        """返回当前 (created, write_count, copy_count) 用于增量统计。"""
+        return (len(self.created), self.write_count, self.copy_count)
+
+    @staticmethod
+    def diff(before: Tuple[int, int, int], after: Tuple[int, int, int]) -> Tuple[int, int, int]:
+        return (after[0] - before[0], after[1] - before[1], after[2] - before[2])
 
 
 # ----------------------------------------------------------------------------
@@ -637,14 +664,128 @@ def write_toml_command(agent_key: str, skill: Skill, writer: Writer) -> None:
             writer.copy_file(f, sibling / rel)
 
 
-def write_rules(agent_key: str, rules: List[Path], writer: Writer) -> None:
-    cfg = AGENT_CONFIGS[agent_key]
-    rules_dir = cfg.get("rules_dir")
-    if not rules_dir:
-        return
-    target_dir = writer.dst_root / rules_dir
+# ----------------------------------------------------------------------------
+# rules 同步: 策略 B (原生路径优先 + AGENTS.md 兜底)
+# ----------------------------------------------------------------------------
+RULES_BLOCK_BEGIN = "<!-- BEGIN: agent_convert auto-generated rules -->"
+RULES_BLOCK_END = "<!-- END: agent_convert auto-generated rules -->"
+AGENTS_MD_IMPORT_LINE = "@AGENTS.md"
+
+
+def _build_merged_rules(rules: List[Path]) -> str:
+    """把多个规则文件合并成一段 Markdown 文本(用于 AGENTS.md 内嵌块)。"""
+    sections: List[str] = []
     for r in rules:
-        writer.copy_file(r, target_dir / r.name)
+        try:
+            content = r.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        # 简单粗暴: 去掉 frontmatter 区块(--- ... ---)以免影响 AGENTS.md 整体结构
+        if content.lstrip().startswith("---"):
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                content = parts[2].lstrip()
+        title = r.stem
+        sections.append(f"## Rule: {title}\n\n{content.strip()}")
+    return "\n\n---\n\n".join(sections) if sections else ""
+
+
+def _update_or_append_block(
+    file_path: Path, block_content: str, writer: Writer,
+    begin_marker: str = RULES_BLOCK_BEGIN, end_marker: str = RULES_BLOCK_END,
+    fallback_header: str = "",
+) -> None:
+    """
+    在指定文件里维护一个 BEGIN/END 标记块。已存在则替换; 不存在则追加;
+    文件本身不存在则按 fallback_header + 块内容新建。
+    """
+    new_block = f"{begin_marker}\n{block_content}\n{end_marker}"
+    existing = ""
+    if file_path.is_file():
+        try:
+            existing = file_path.read_text(encoding="utf-8")
+        except Exception:
+            existing = ""
+
+    if not existing:
+        new_text = (fallback_header + ("\n\n" if fallback_header else "") + new_block + "\n")
+    elif begin_marker in existing and end_marker in existing:
+        # 替换旧 block
+        new_text = re.sub(
+            re.escape(begin_marker) + r".*?" + re.escape(end_marker),
+            new_block,
+            existing,
+            count=1,
+            flags=re.DOTALL,
+        )
+    else:
+        # 追加
+        new_text = existing.rstrip() + "\n\n" + new_block + "\n"
+
+    if new_text != existing:
+        writer.write_text(file_path, new_text)
+
+
+def _ensure_agents_md_import(context_file: Path, writer: Writer) -> None:
+    """确保 context 文件第一行(或顶部)包含 @AGENTS.md 引用。"""
+    if context_file.is_file():
+        existing = context_file.read_text(encoding="utf-8")
+        if AGENTS_MD_IMPORT_LINE in existing:
+            return
+        new_text = AGENTS_MD_IMPORT_LINE + "\n\n" + existing
+    else:
+        new_text = AGENTS_MD_IMPORT_LINE + "\n"
+    writer.write_text(context_file, new_text)
+
+
+def write_rules(agent_key: str, rules: List[Path], writer: Writer) -> None:
+    """按 rules_strategy 分发规则:
+       - native:           写到原生 rules_dir/<name>.{mdc|md}
+       - instructions:     写到 .github/instructions/<name>.instructions.md (copilot)
+       - agents-md:        合并写入 AGENTS.md 的标记块 (codex)
+       - import-agents-md: 同 agents-md, 并在 context_file 注入 @AGENTS.md (gemini/qwen/iflow)
+    """
+    if not rules:
+        return
+    cfg = AGENT_CONFIGS[agent_key]
+    strategy = cfg.get("rules_strategy") or ("native" if cfg.get("rules_dir") else None)
+
+    if strategy == "native":
+        rules_dir = cfg.get("rules_dir")
+        if not rules_dir:
+            return
+        target_dir = writer.dst_root / rules_dir
+        for r in rules:
+            writer.copy_file(r, target_dir / r.name)
+        return
+
+    if strategy == "instructions":
+        instr_dir = cfg.get("instructions_dir") or ".github/instructions"
+        target_dir = writer.dst_root / instr_dir
+        for r in rules:
+            stem = r.stem  # 去掉 .mdc / .md
+            dst = target_dir / f"{stem}.instructions.md"
+            # 转换: copilot 要求 .instructions.md 文件,直接拷文件即可
+            writer.copy_file(r, dst)
+        return
+
+    if strategy in ("agents-md", "import-agents-md"):
+        merged = _build_merged_rules(rules)
+        if not merged:
+            return
+        agents_md = writer.dst_root / "AGENTS.md"
+        _update_or_append_block(
+            agents_md, merged, writer,
+            fallback_header="# AGENTS.md\n\n本项目的 AI Agent 通用规则。"
+        )
+        if strategy == "import-agents-md":
+            ctx_rel = cfg.get("context_file")
+            if ctx_rel:
+                _ensure_agents_md_import(writer.dst_root / ctx_rel, writer)
+        return
+
+    # 未知策略 -> 静默跳过
+    return
 
 
 # ============================================================================
@@ -877,7 +1018,7 @@ def write_settings(agent_key: str, src_path: Path, writer: Writer) -> None:
 # ----------------------------------------------------------------------------
 # 主流程
 # ----------------------------------------------------------------------------
-SYNC_CATEGORIES = ["skills", "rules", "context", "commands", "agents", "mcp", "settings"]
+SYNC_CATEGORIES = ["skills", "context", "rules", "commands", "agents", "mcp", "settings"]
 
 
 # ============================================================================
@@ -1107,7 +1248,7 @@ def _write_resolved(category: str, chosen: Candidate, all_targets: List[str], wr
 
 def sync_all(root: Path, dry_run: bool = False, sync: Optional[List[str]] = None,
              prefer: Optional[str] = None, auto: Optional[str] = None,
-             targets: Optional[List[str]] = None) -> None:
+             targets: Optional[List[str]] = None, verbose: bool = False) -> None:
     """全局 sync 模式: 扫描所有 agent → 合并 → 解决冲突 → 写回所有。"""
     enabled = set(sync or SYNC_CATEGORIES)
 
@@ -1134,7 +1275,7 @@ def sync_all(root: Path, dry_run: bool = False, sync: Optional[List[str]] = None
         "settings": _collect_settings,
     }
 
-    writer = Writer(root, dry_run=dry_run)
+    writer = Writer(root, dry_run=dry_run, verbose=verbose)
     total_resolved = 0
 
     for cat in SYNC_CATEGORIES:
@@ -1156,7 +1297,9 @@ def sync_all(root: Path, dry_run: bool = False, sync: Optional[List[str]] = None
             total_resolved += 1
 
     print("\n" + "=" * 60)
-    print(f"完成! 共 {total_resolved} 项已分发, 写入/拷贝 {len(writer.created)} 个文件"
+    print(f"完成! 共 {total_resolved} 项已分发, "
+          f"{writer.write_count + writer.copy_count} 个文件 "
+          f"(写入 {writer.write_count}, 拷贝 {writer.copy_count})"
           f"{'(dry-run 未实际写)' if dry_run else ''}")
 
 
@@ -1171,6 +1314,7 @@ def convert(
     items_filter: Optional[List[str]] = None,
     dry_run: bool = False,
     sync: Optional[List[str]] = None,
+    verbose: bool = False,
 ) -> None:
     if from_agent not in AGENT_CONFIGS:
         print(f"[!] 未知源 agent: {from_agent}（支持的见 --list）"); sys.exit(2)
@@ -1215,7 +1359,7 @@ def convert(
     print(f"dry-run:  {dry_run}")
     print("=" * 60)
 
-    writer = Writer(dst_root, dry_run=dry_run)
+    writer = Writer(dst_root, dry_run=dry_run, verbose=verbose)
 
     for to_key in to_agents:
         if to_key not in AGENT_CONFIGS:
@@ -1224,10 +1368,13 @@ def convert(
             print(f"[skip] {to_key} 与源相同且 src==dst,跳过避免覆盖自身"); continue
 
         cfg = AGENT_CONFIGS[to_key]
-        print(f"\n>>> 转到 [{to_key}] ({cfg['name']}) format={cfg['format']} dir={cfg['dir']}")
+        before = writer.snapshot()
+        cat_counts: Dict[str, int] = {}    # 每类的写入条数(用于 summary)
+        skipped: List[str] = []            # 收集被跳过的类目
 
         # 1) skills
         if "skills" in enabled and skills:
+            snap = writer.snapshot()
             for sk in skills:
                 fmt = cfg["format"]
                 if fmt == "skill":
@@ -1236,50 +1383,73 @@ def convert(
                     write_markdown_command(to_key, sk, writer, source_id=from_agent)
                 elif fmt == "toml":
                     write_toml_command(to_key, sk, writer)
-                else:
-                    print(f"  [skip] 不支持的 format: {fmt}")
+            cat_counts["skills"] = len(skills)
+            _ = writer.diff(snap, writer.snapshot())
 
-        # 2) rules
-        if "rules" in enabled and rules:
-            write_rules(to_key, rules, writer)
-
-        # 3) context
+        # 2) context (先 context, 后 rules: 让 import-agents-md 模式能在已有 context 上注入 @AGENTS.md)
         if "context" in enabled and context_text is not None:
             if cfg.get("context_file"):
                 write_context(to_key, context_text, writer)
+                cat_counts["context"] = 1
             else:
-                print(f"  [skip-context] {to_key} 没有 context_file 路径")
+                skipped.append("context")
+
+        # 3) rules (策略 B: native / instructions / agents-md / import-agents-md)
+        if "rules" in enabled and rules:
+            strategy = cfg.get("rules_strategy")
+            if strategy:
+                before_r = writer.snapshot()
+                write_rules(to_key, rules, writer)
+                after_r = writer.snapshot()
+                # 真有写出才计数
+                if writer.diff(before_r, after_r)[1] + writer.diff(before_r, after_r)[2] > 0:
+                    cat_counts["rules"] = len(rules)
+            else:
+                skipped.append("rules")
 
         # 4) commands
         if "commands" in enabled and commands_files:
-            if cfg.get("commands_dir"):
+            if cfg.get("commands_dir") and cfg.get("commands_dir") != cfg.get("dir"):
                 write_commands(to_key, commands_files, writer)
+                cat_counts["commands"] = len(commands_files)
             else:
-                print(f"  [skip-commands] {to_key} 没有 commands_dir")
+                skipped.append("commands")
 
         # 5) agents
         if "agents" in enabled and agents_files:
-            if cfg.get("agents_dir"):
+            if cfg.get("agents_dir") and cfg.get("agents_dir") != cfg.get("dir"):
                 write_agents(to_key, agents_files, writer)
+                cat_counts["agents"] = len(agents_files)
             else:
-                print(f"  [skip-agents] {to_key} 没有 agents_dir")
+                skipped.append("agents")
 
         # 6) mcp
         if "mcp" in enabled and mcp_data.get("servers"):
             if cfg.get("mcp_file"):
                 write_mcp(to_key, mcp_data, writer)
+                cat_counts["mcp"] = len(mcp_data["servers"])
             else:
-                print(f"  [skip-mcp] {to_key} 没有 mcp_file")
+                skipped.append("mcp")
 
         # 7) settings
         if "settings" in enabled and settings_path:
             if cfg.get("settings_file"):
                 write_settings(to_key, settings_path, writer)
+                cat_counts["settings"] = 1
             else:
-                print(f"  [skip-settings] {to_key} 没有 settings_file")
+                skipped.append("settings")
 
-    print("\n" + "=" * 60)
-    print(f"完成！共写入/拷贝 {len(writer.created)} 个文件{'(dry-run 未实际写)' if dry_run else ''}")
+        # ---- 一行汇总 ----
+        delta = writer.diff(before, writer.snapshot())
+        total = delta[1] + delta[2]   # write_count + copy_count (dry-run 也准)
+        cat_str = " ".join(f"{k}({v})" for k, v in cat_counts.items()) or "(空)"
+        skip_str = f"   [目标不支持: {','.join(skipped)}]" if skipped else ""
+        print(f">>> [{to_key:14s}] {cat_str:50s}  → {total} 文件{skip_str}")
+
+    print("=" * 60)
+    total = writer.write_count + writer.copy_count
+    print(f"完成! 共 {total} 个文件 (写入 {writer.write_count}, 拷贝 {writer.copy_count})"
+          f"{'(dry-run 未实际写)' if dry_run else ''}")
 
 
 # ----------------------------------------------------------------------------
@@ -1341,6 +1511,8 @@ def main(argv: Optional[List[str]] = None) -> None:
     parser.add_argument("--auto", default=None, choices=["newest", "skip", "first"],
                         help="(sync 模式) 非交互冲突解决策略")
     parser.add_argument("-n", "--dry-run", action="store_true", help="只预览不写")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="显示每个文件的 [WRITE]/[COPY] 明细 (默认只显示进度汇总)")
     parser.add_argument("-l", "--list", action="store_true", help="列出支持的 agent")
     args = parser.parse_args(argv)
 
@@ -1360,13 +1532,32 @@ def main(argv: Optional[List[str]] = None) -> None:
         for k, v in AGENT_CONFIGS.items():
             cells = []
             for cat, key in col_keys:
-                if cat in ("commands", "agents") and v.get(key) and v.get(key) == v.get("dir"):
+                if cat == "rules":
+                    # rules 列特殊: 显示策略缩写
+                    strat = v.get("rules_strategy")
+                    if strat == "native":
+                        cells.append(f"{'native':8s}")
+                    elif strat == "instructions":
+                        cells.append(f"{'instr':8s}")
+                    elif strat == "agents-md":
+                        cells.append(f"{'AGENTS':8s}")
+                    elif strat == "import-agents-md":
+                        cells.append(f"{'@AGENTS':8s}")
+                    else:
+                        cells.append(f"{'--':8s}")
+                elif cat in ("commands", "agents") and v.get(key) and v.get(key) == v.get("dir"):
                     cells.append(f"{'(skill)':8s}")
                 elif v.get(key):
                     cells.append(f"{'Y':8s}")
                 else:
                     cells.append(f"{'--':8s}")
             print(f"  {k:14s}  " + "  ".join(cells))
+        print()
+        print("  rules 列含义:")
+        print("    native    写到 agent 自己的 rules 目录(.claude/rules/, .cursor/rules/ 等)")
+        print("    instr     写到 .github/instructions/<name>.instructions.md (copilot)")
+        print("    AGENTS    合并到项目根 AGENTS.md (codex 直接读)")
+        print("    @AGENTS   合并到 AGENTS.md, 并在 context 文件添加 @AGENTS.md (gemini/qwen/iflow)")
         return
 
     # ---- 解析 --sync / --skip ----
@@ -1394,6 +1585,7 @@ def main(argv: Optional[List[str]] = None) -> None:
             sync=sync_set,
             prefer=args.prefer,
             auto=args.auto,
+            verbose=args.verbose,
         )
         return
 
@@ -1414,6 +1606,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         items_filter=args.items,
         dry_run=args.dry_run,
         sync=sync_set,
+        verbose=args.verbose,
     )
 
 
