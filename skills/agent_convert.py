@@ -75,7 +75,6 @@ except Exception:  # pragma: no cover
 #     name / dir / format / extension / args
 #   skill / rules:
 #     rules_dir          规则文件目录(None=不支持)
-#     claude_inject      Claude 专属 frontmatter 字段注入
 #     copilot_companion  Copilot 配套 .prompt.md
 #   扩展同步类目 (--sync 控制):
 #     context_file       根 context/记忆文件路径 (例 CLAUDE.md / GEMINI.md)
@@ -111,7 +110,6 @@ AGENT_CONFIGS: Dict[str, Dict[str, Any]] = {
         "args": "$ARGUMENTS",
         "rules_dir": ".claude/rules",        # 修正: Claude 原生支持 .claude/rules/
         "rules_strategy": "native",
-        "claude_inject": True,
         "context_file": "CLAUDE.md",
         "commands_dir": ".claude/commands",
         "agents_dir": ".claude/agents",
@@ -604,9 +602,8 @@ def _build_skill_frontmatter(agent_key: str, skill: Skill) -> Dict[str, Any]:
         "name": skill.name,
         "description": skill.description or f"Skill: {skill.name}",
     }
-    if AGENT_CONFIGS[agent_key].get("claude_inject"):
-        fm["user-invocable"] = True
-        fm["disable-model-invocation"] = True
+    # 注:此前会在 Claude 目标里注入 user-invocable / disable-model-invocation
+    # 把 skill 锁成 user-only,现已取消,让模型可以自动触发同步过来的 skill。
     return fm
 
 
