@@ -79,27 +79,14 @@ function hexToRgba(hex, alpha = 100) {
   return { color: hex.replace("@", "").slice(0, 6), transparency: 100 - alpha };
 }
 
-/** 从spec.gradients构建渐变填充对象 */
+/** 从spec.gradients构建渐变填充对象（pptxgenjs shape填充支持渐变） */
 function buildGradientFill(gradient) {
   if (!gradient || !gradient.stops || gradient.stops.length < 2) return null;
 
-  // pptxgenjs 支持的渐变格式
   const stops = gradient.stops.map(s => ({
-    position: s.position, // 0~100
-    color: s.color.replace(/@\d+%/,"").slice(0, 6),
+    position: s.position,
+    color: extractHexColor(s.color),
   }));
-
-  // 方向映射
-  const directionMap = {
-    "left-to-right": { x: 0, y: 0.5, w: 1, h: 0.5 },
-    "right-to-left": { x: 1, y: 0.5, w: 0, h: 0.5 },
-    "top-to-bottom": { x: 0.5, y: 0, w: 0.5, h: 1 },
-    "bottom-to-top": { x: 0.5, y: 1, w: 0.5, h: 0 },
-    "top-left-to-bottom-right": { x: 0, y: 0, w: 1, h: 1 },
-    "bottom-right-to-top-left": { x: 1, y: 1, w: 0, h: 0 },
-  };
-
-  const dir = directionMap[gradient.direction] || directionMap["left-to-right"];
 
   return {
     gradient: {
@@ -306,7 +293,7 @@ function addLeftAccentBar(slide, color) {
   });
 }
 
-/** 应用渐变背景 */
+/** 应用渐变背景（pptxgenjs不支持渐变背景，回退为使用渐变首色+渐变尾色叠加两个半透明矩形模拟） */
 function applyGradientBg(slide, gradientIndex) {
   if (!gradients.length) return false;
 
@@ -315,21 +302,36 @@ function applyGradientBg(slide, gradientIndex) {
 
   if (!grad || !grad.stops || grad.stops.length < 2) return false;
 
-  // pptxgenjs 渐变背景
-  const stops = grad.stops.map(s => ({
-    position: s.position,
-    color: s.color.replace(/@\d+%/,"").slice(0, 6),
-  }));
+  // 提取首色和尾色
+  const firstStop = grad.stops[0];
+  const lastStop = grad.stops[grad.stops.length - 1];
 
-  slide.background = {
-    fill: {
-      type: "gradient",
-      stops: stops,
-      direction: grad.direction || "left-to-right",
-    },
-  };
+  const firstColor = extractHexColor(firstStop.color);
+  const lastColor = extractHexColor(lastStop.color);
+
+  // 使用首色作为纯色背景
+  slide.background = { color: firstColor };
+
+  // 叠加一个半透明矩形模拟渐变效果（从首色过渡到尾色）
+  slide.addShape(pres.shapes.RECTANGLE, {
+    x: 0, y: 0, w: 10, h: 5.625,
+    fill: { color: lastColor, transparency: 50 },
+  });
 
   return true;
+}
+
+/** 从颜色字符串（如 "D4A574@10%" 或 {raw:...} 或 "D4A574"）中提取6位hex */
+function extractHexColor(colorVal) {
+  if (typeof colorVal === "string") {
+    return colorVal.replace(/@\d+%/g, "").slice(0, 6).toUpperCase();
+  }
+  if (colorVal && typeof colorVal === "object") {
+    // schemeClr 等对象格式
+    if (colorVal.raw) return String(colorVal.raw).slice(0, 6).toUpperCase();
+    return "FFFFFF"; // fallback
+  }
+  return "FFFFFF";
 }
 
 // ─── 转场设置 ───
