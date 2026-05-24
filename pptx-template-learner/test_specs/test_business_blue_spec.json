@@ -1,0 +1,382 @@
+{
+  "theme": "test_business_blue",
+  "mode": "strict",
+  "meta": {
+    "analyzed_at": "2026-05-24T17:48:58.116540",
+    "source_files": [
+      "test_business_blue.pptx"
+    ],
+    "slide_count_range": [
+      6,
+      6
+    ]
+  },
+  "slide_size": {
+    "w": 10.0,
+    "h": 5.625,
+    "ratio": "1.78"
+  },
+  "colors": {
+    "primary": "1B3A5C",
+    "secondary": "E8913A",
+    "accent": "E8913A",
+    "bg_dark": "1B3A5C",
+    "bg_light": "F8F9FA",
+    "text_dark": "2D3748",
+    "text_light": "FFFFFF"
+  },
+  "fonts": {
+    "title": {
+      "name": "Arial",
+      "size": 36,
+      "bold": true
+    },
+    "subtitle": {
+      "name": "Arial",
+      "size": 20,
+      "bold": false
+    },
+    "body": {
+      "name": "Calibri",
+      "size": 14,
+      "bold": false
+    }
+  },
+  "layout": {
+    "margins": {
+      "top": 0.5,
+      "right": 0.5,
+      "bottom": 0.5,
+      "left": 0.5
+    }
+  },
+  "toc_structure": {
+    "has_toc": true,
+    "toc_slide_position": 2,
+    "sections": [
+      "目录 CONTENTS",
+      "市场环境分析",
+      "战略方向",
+      "执行计划",
+      "风险管控"
+    ]
+  },
+  "slide_types": [
+    {
+      "role": "cover",
+      "index": 1,
+      "text_preview": [
+        "2026年度战略规划",
+        "战略部 · 2026年Q1"
+      ],
+      "element_count": 3,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 1.8,
+          "w": 8.0,
+          "h": 1.0,
+          "text": "2026年度战略规划"
+        },
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 3.2,
+          "w": 8.0,
+          "h": 0.6,
+          "text": "战略部 · 2026年Q1"
+        },
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 3.1,
+          "w": 3.0,
+          "h": 0.02
+        }
+      ]
+    },
+    {
+      "role": "toc",
+      "index": 2,
+      "text_preview": [
+        "目录 CONTENTS",
+        "1",
+        "市场环境分析",
+        "2",
+        "战略方向"
+      ],
+      "element_count": 13,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.5,
+          "w": 3.0,
+          "h": 0.8,
+          "text": "目录 CONTENTS"
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 1.5,
+          "w": 0.5,
+          "h": 0.5
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 1.5,
+          "w": 0.5,
+          "h": 0.5,
+          "text": "1"
+        },
+        {
+          "type": "sp",
+          "x": 2.0,
+          "y": 1.5,
+          "w": 6.0,
+          "h": 0.5,
+          "text": "市场环境分析"
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 2.4,
+          "w": 0.5,
+          "h": 0.5
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 2.4,
+          "w": 0.5,
+          "h": 0.5,
+          "text": "2"
+        },
+        {
+          "type": "sp",
+          "x": 2.0,
+          "y": 2.4,
+          "w": 6.0,
+          "h": 0.5,
+          "text": "战略方向"
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 3.3,
+          "w": 0.5,
+          "h": 0.5
+        },
+        {
+          "type": "sp",
+          "x": 1.2,
+          "y": 3.3,
+          "w": 0.5,
+          "h": 0.5,
+          "text": "3"
+        },
+        {
+          "type": "sp",
+          "x": 2.0,
+          "y": 3.3,
+          "w": 6.0,
+          "h": 0.5,
+          "text": "执行计划"
+        }
+      ]
+    },
+    {
+      "role": "section",
+      "index": 3,
+      "text_preview": [
+        "市场环境分析"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 2.0,
+          "w": 8.0,
+          "h": 1.2,
+          "text": "市场环境分析"
+        },
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 1.8,
+          "w": 3.0,
+          "h": 0.03
+        }
+      ]
+    },
+    {
+      "role": "content",
+      "index": 4,
+      "text_preview": [
+        "市场规模与趋势",
+        "• 全球市场规模预计达 $2.8万亿，年增长率 12%",
+        "• 亚太地区贡献 45% 的增长份额",
+        "• 数字化转型加速，企业级需求持续上升",
+        "• 竞争格局趋于稳定，头部效应明显"
+      ],
+      "element_count": 3,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 10.0,
+          "h": 1.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.15,
+          "w": 9.0,
+          "h": 0.7,
+          "text": "市场规模与趋势"
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.3,
+          "w": 9.0,
+          "h": 3.5,
+          "text": "• 全球市场规模预计达 $2.8万亿，年增长率 12%"
+        }
+      ]
+    },
+    {
+      "role": "content",
+      "index": 5,
+      "text_preview": [
+        "关键数据指标",
+        "$2.8T",
+        "市场规模",
+        "45%",
+        "亚太占比"
+      ],
+      "element_count": 10,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.5,
+          "w": 9.0,
+          "h": 0.7,
+          "text": "关键数据指标"
+        },
+        {
+          "type": "sp",
+          "x": 0.8,
+          "y": 1.8,
+          "w": 2.5,
+          "h": 2.5
+        },
+        {
+          "type": "sp",
+          "x": 0.8,
+          "y": 2.0,
+          "w": 2.5,
+          "h": 0.8,
+          "text": "$2.8T"
+        },
+        {
+          "type": "sp",
+          "x": 0.8,
+          "y": 2.8,
+          "w": 2.5,
+          "h": 0.5,
+          "text": "市场规模"
+        },
+        {
+          "type": "sp",
+          "x": 3.8,
+          "y": 1.8,
+          "w": 2.5,
+          "h": 2.5
+        },
+        {
+          "type": "sp",
+          "x": 3.8,
+          "y": 2.0,
+          "w": 2.5,
+          "h": 0.8,
+          "text": "45%"
+        },
+        {
+          "type": "sp",
+          "x": 3.8,
+          "y": 2.8,
+          "w": 2.5,
+          "h": 0.5,
+          "text": "亚太占比"
+        },
+        {
+          "type": "sp",
+          "x": 6.8,
+          "y": 1.8,
+          "w": 2.5,
+          "h": 2.5
+        },
+        {
+          "type": "sp",
+          "x": 6.8,
+          "y": 2.0,
+          "w": 2.5,
+          "h": 0.8,
+          "text": "99.9%"
+        },
+        {
+          "type": "sp",
+          "x": 6.8,
+          "y": 2.8,
+          "w": 2.5,
+          "h": 0.5,
+          "text": "系统可用"
+        }
+      ]
+    },
+    {
+      "role": "ending",
+      "index": 6,
+      "text_preview": [
+        "感谢聆听",
+        "yzc-cn@qq.com"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 2.0,
+          "w": 8.0,
+          "h": 1.2,
+          "text": "感谢聆听"
+        },
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 3.5,
+          "w": 8.0,
+          "h": 0.5,
+          "text": "yzc-cn@qq.com"
+        }
+      ]
+    }
+  ],
+  "animations": {
+    "default_transition": "fade",
+    "transition_duration_ms": 700,
+    "element_animations": []
+  }
+}

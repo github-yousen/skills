@@ -1,0 +1,416 @@
+{
+  "theme": "business_generated",
+  "mode": "strict",
+  "meta": {
+    "analyzed_at": "2026-05-24T17:41:12.038951",
+    "source_files": [
+      "business_generated.pptx"
+    ],
+    "slide_count_range": [
+      9,
+      9
+    ]
+  },
+  "slide_size": {
+    "w": 10.0,
+    "h": 5.625,
+    "ratio": "1.78"
+  },
+  "colors": {
+    "primary": "1B3A5C",
+    "secondary": "E8913A",
+    "accent": "E8913A",
+    "bg_dark": "1B3A5C",
+    "bg_light": "F8F9FA",
+    "text_dark": "2D3748",
+    "text_light": "FFFFFF"
+  },
+  "fonts": {
+    "title": {
+      "name": "Arial",
+      "size": 44,
+      "bold": true
+    },
+    "subtitle": {
+      "name": "Calibri",
+      "size": 20,
+      "bold": false
+    },
+    "body": {
+      "name": "Calibri",
+      "size": 10,
+      "bold": false
+    }
+  },
+  "layout": {
+    "margins": {
+      "top": 0.5,
+      "right": 0.5,
+      "bottom": 0.5,
+      "left": 0.5
+    }
+  },
+  "toc_structure": {
+    "has_toc": true,
+    "toc_slide_position": 2,
+    "sections": [
+      "目录",
+      "1. 年度回顾",
+      "2. 数据分析",
+      "3. 未来规划",
+      "年度回顾",
+      "数据分析",
+      "未来规划"
+    ]
+  },
+  "slide_types": [
+    {
+      "role": "cover",
+      "index": 1,
+      "text_preview": [
+        "2026年年度战略报告",
+        "企业战略规划部"
+      ],
+      "element_count": 3,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.5,
+          "w": 9.0,
+          "h": 1.5,
+          "text": "2026年年度战略报告"
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 3.2,
+          "w": 9.0,
+          "h": 0.6,
+          "text": "企业战略规划部"
+        },
+        {
+          "type": "sp",
+          "x": 3.0,
+          "y": 3.05,
+          "w": 4.0,
+          "h": 0.0
+        }
+      ]
+    },
+    {
+      "role": "toc",
+      "index": 2,
+      "text_preview": [
+        "目录",
+        "1. 年度回顾",
+        "2. 数据分析",
+        "3. 未来规划"
+      ],
+      "element_count": 3,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 0.08,
+          "h": 5.62
+        },
+        {
+          "type": "sp",
+          "x": 0.7,
+          "y": 0.5,
+          "w": 8.0,
+          "h": 0.8,
+          "text": "目录"
+        },
+        {
+          "type": "sp",
+          "x": 1.0,
+          "y": 1.5,
+          "w": 8.0,
+          "h": 3.5,
+          "text": "1. 年度回顾"
+        }
+      ]
+    },
+    {
+      "role": "section",
+      "index": 3,
+      "text_preview": [
+        "年度回顾"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 2.2,
+          "w": 3.0,
+          "h": 0.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 2.4,
+          "w": 9.0,
+          "h": 1.2,
+          "text": "年度回顾"
+        }
+      ]
+    },
+    {
+      "role": "content",
+      "index": 4,
+      "text_preview": [
+        "核心业务成果",
+        "营收突破50亿，同比增长28%",
+        "市场份额扩大至行业前三",
+        "成功推出两款旗舰产品线",
+        "获得ISO 27001信息安全认证"
+      ],
+      "element_count": 3,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 10.0,
+          "h": 1.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.1,
+          "w": 9.0,
+          "h": 0.8,
+          "text": "核心业务成果"
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.3,
+          "w": 9.0,
+          "h": 4.0,
+          "text": "营收突破50亿，同比增长28%"
+        }
+      ]
+    },
+    {
+      "role": "section",
+      "index": 5,
+      "text_preview": [
+        "数据分析"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 2.2,
+          "w": 3.0,
+          "h": 0.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 2.4,
+          "w": 9.0,
+          "h": 1.2,
+          "text": "数据分析"
+        }
+      ]
+    },
+    {
+      "role": "content",
+      "index": 6,
+      "text_preview": [
+        "关键经营指标",
+        "50.2亿",
+        "总收入",
+        "同比增长28%",
+        "8.6亿"
+      ],
+      "element_count": 16,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.5,
+          "w": 9.0,
+          "h": 0.7,
+          "text": "关键经营指标"
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.5,
+          "w": 2.8,
+          "h": 2.8
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.5,
+          "w": 0.06,
+          "h": 2.8
+        },
+        {
+          "type": "sp",
+          "x": 0.7,
+          "y": 1.8,
+          "w": 2.4,
+          "h": 1.0,
+          "text": "50.2亿"
+        },
+        {
+          "type": "sp",
+          "x": 0.7,
+          "y": 2.8,
+          "w": 2.4,
+          "h": 0.5,
+          "text": "总收入"
+        },
+        {
+          "type": "sp",
+          "x": 0.7,
+          "y": 3.3,
+          "w": 2.4,
+          "h": 0.8,
+          "text": "同比增长28%"
+        },
+        {
+          "type": "sp",
+          "x": 3.6,
+          "y": 1.5,
+          "w": 2.8,
+          "h": 2.8
+        },
+        {
+          "type": "sp",
+          "x": 3.6,
+          "y": 1.5,
+          "w": 0.06,
+          "h": 2.8
+        },
+        {
+          "type": "sp",
+          "x": 3.8,
+          "y": 1.8,
+          "w": 2.4,
+          "h": 1.0,
+          "text": "8.6亿"
+        },
+        {
+          "type": "sp",
+          "x": 3.8,
+          "y": 2.8,
+          "w": 2.4,
+          "h": 0.5,
+          "text": "净利润"
+        }
+      ]
+    },
+    {
+      "role": "section",
+      "index": 7,
+      "text_preview": [
+        "未来规划"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 2.2,
+          "w": 3.0,
+          "h": 0.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 2.4,
+          "w": 9.0,
+          "h": 1.2,
+          "text": "未来规划"
+        }
+      ]
+    },
+    {
+      "role": "content",
+      "index": 8,
+      "text_preview": [
+        "2027战略方向",
+        "拓展海外市场，目标东南亚",
+        "建设智能化供应链体系",
+        "深化AI+业务融合创新",
+        "推进ESG可持续发展计划"
+      ],
+      "element_count": 3,
+      "bg_color": "F8F9FA",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 10.0,
+          "h": 1.0
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 0.1,
+          "w": 9.0,
+          "h": 0.8,
+          "text": "2027战略方向"
+        },
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.3,
+          "w": 9.0,
+          "h": 4.0,
+          "text": "拓展海外市场，目标东南亚"
+        }
+      ]
+    },
+    {
+      "role": "ending",
+      "index": 9,
+      "text_preview": [
+        "谢谢观看"
+      ],
+      "element_count": 2,
+      "bg_color": "1B3A5C",
+      "elements": [
+        {
+          "type": "sp",
+          "x": 0.5,
+          "y": 1.8,
+          "w": 9.0,
+          "h": 1.5,
+          "text": "谢谢观看"
+        },
+        {
+          "type": "sp",
+          "x": 3.5,
+          "y": 3.5,
+          "w": 3.0,
+          "h": 0.0
+        }
+      ]
+    }
+  ],
+  "animations": {
+    "default_transition": "none",
+    "transition_duration_ms": 700,
+    "element_animations": []
+  }
+}

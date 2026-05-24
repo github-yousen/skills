@@ -1,0 +1,41 @@
+{
+  "title": "2026年年度战略报告",
+  "subtitle": "企业战略规划部",
+  "sections": [
+    {
+      "title": "年度回顾",
+      "slides": [
+        {
+          "type": "content",
+          "heading": "核心业务成果",
+          "body": "- 营收突破50亿，同比增长28%\n- 市场份额扩大至行业前三\n- 成功推出两款旗舰产品线\n- 获得ISO 27001信息安全认证"
+        }
+      ]
+    },
+    {
+      "title": "数据分析",
+      "slides": [
+        {
+          "type": "data",
+          "heading": "关键经营指标",
+          "data_points": [
+            { "label": "总收入", "value": "50.2亿", "description": "同比增长28%" },
+            { "label": "净利润", "value": "8.6亿", "description": "利润率17.1%" },
+            { "label": "研发投入", "value": "6.8亿", "description": "占营收13.5%" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "未来规划",
+      "slides": [
+        {
+          "type": "content",
+          "heading": "2027战略方向",
+          "body": "- 拓展海外市场，目标东南亚\n- 建设智能化供应链体系\n- 深化AI+业务融合创新\n- 推进ESG可持续发展计划"
+        }
+      ]
+    }
+  ],
+  "ending_text": "谢谢观看"
+}
