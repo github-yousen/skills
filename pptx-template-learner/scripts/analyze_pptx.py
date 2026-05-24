@@ -143,8 +143,12 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
 
     # Step 2: 提取非背景形状填充色(按面积加权,排除全页背景)
     shape_data = _extract_shape_fill_data(zf, slide_w, slide_h)
-    # 排除纯黑纯白和极浅背景色,但保留bg_dark(它可能就是主色调)
-    exclude = set([colors["bg_light"].upper(), "FFFFFF", "000000"])
+    # 排除纯白(通用浅色文字色)，但保留黑色和彩色bg_light(它们可能是设计意图色)
+    exclude = {"FFFFFF"}
+    # 如果bg_light也是低饱和度/纯白，则排除；如果是饱和彩色(如00D4FF)，保留作为候选
+    bg_light = colors["bg_light"].upper()
+    if _color_saturation(bg_light) < 0.15 or bg_light == "FFFFFF":
+        exclude.add(bg_light)
     # 允许少量灰度但排除明显中性灰
     candidates = []
     for col, area in shape_data:
@@ -153,31 +157,59 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
             candidates.append((cu, area))
 
     if candidates:
-        # 按面积+饱和度综合加权
-        # 让高饱和度颜色获得额外权重(主色调通常是饱和颜色)
+        # 按面积为基础权重，辅以修正因子分配primary/secondary/accent
         weighted = Counter()
         for col, area in candidates:
             sat = _color_saturation(col)
             lum = _color_luminance(col)
-            # 高饱和度有加成,但极暗或极亮减少权重
+            # 基础权重：面积占比 × 100
             weight = max(1, int(area / (slide_w * slide_h) * 100))
-            if sat > 0.3:
-                weight = int(weight * 1.5)
-            if lum < 0.1 or lum > 0.95:
-                weight = max(1, int(weight * 0.3))  # 极暗/极亮降权
-            # OOXML默认配色方案值降权(这些通常不是设计意图色)
+            # 极暗(<0.05)/极亮(>0.95)小幅降权，避免纯黑纯白过度压制
+            if lum < 0.05 or lum > 0.95:
+                weight = max(1, int(weight * 0.7))
+            elif lum < 0.08 or lum > 0.92:
+                weight = max(1, int(weight * 0.9))
+            # OOXML默认配色方案值大幅降权
             if col in hardcoded_defaults:
                 weight = max(1, int(weight * 0.1))
             weighted[col] += weight
         sorted_colors = weighted.most_common()
-        # 过滤掉权重过低的OOXML默认色
         sorted_colors = [(c, w) for c, w in sorted_colors if c not in hardcoded_defaults or w > 5]
+
+        # 语义化分配
         if sorted_colors:
             colors["primary"] = sorted_colors[0][0]
-        if len(sorted_colors) > 1:
-            colors["secondary"] = sorted_colors[1][0]
-        if len(sorted_colors) > 2:
-            colors["accent"] = sorted_colors[2][0]
+            non_primary = [(c, w) for c, w in sorted_colors if c != colors["primary"]]
+            if non_primary:
+                # accent = 饱和度最高的非primary色(强调色)
+                sat_sorted = sorted(non_primary, key=lambda x: _color_saturation(x[0]), reverse=True)
+                max_np_w = non_primary[0][1]
+                colors["accent"] = sat_sorted[0][0]
+                # 如果accent权重过低(<max_np_w的10%),尝试选下一个高饱和色
+                for c, sat in sat_sorted:
+                    w = next(w2 for c2, w2 in non_primary if c2 == c)
+                    if w >= max_np_w * 0.1:
+                        colors["accent"] = c
+                        break
+                # secondary = 权重最高的剩余色
+                remaining = [(c, w) for c, w in non_primary if c != colors["accent"]]
+                if remaining:
+                    colors["secondary"] = remaining[0][0]
+
+            # 纯黑主调+彩色强调模式: 仅对真正纯黑/极暗背景(lum<0.02)生效
+            bg_dark = colors.get("bg_dark", "")
+            if (bg_dark and _color_luminance(bg_dark) < 0.02
+                    and colors["primary"] != bg_dark
+                    and _color_saturation(colors["primary"]) > 0.5
+                    and _color_luminance(colors["primary"]) > 0.3):
+                colors["accent"] = colors["primary"]
+                colors["primary"] = bg_dark.upper()
+
+        # 兜底: 如果仍无primary,回退到bg_dark
+        if colors["primary"] in hardcoded_defaults:
+            bg = colors.get("bg_dark", "")
+            if bg and _color_saturation(bg) > 0.15:
+                colors["primary"] = bg
 
     # Step 2.5: 从文本颜色/形状填充色补充配色(仅在Step2结果为默认值/中性灰时)
     # 先构建schemeClr→RGB映射表,用于解析主题色引用
@@ -245,16 +277,12 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
         if bg and _color_saturation(bg) > 0.15:
             colors["primary"] = bg
 
-    # 深色主题优化: 如果bg_dark是有饱和度的深色(非纯黑/深灰),则primary=bg_dark
-    # 多数深色PPT的视觉主色调就是深色背景本身
+    # 深色主题优化(保守): 仅当bg_dark是明显的彩色深色(非近黑)且当前primary仍为默认值时
     bg_d = colors.get("bg_dark", "")
-    if bg_d and _color_saturation(bg_d) > 0.15 and _is_dark_color(bg_d):
+    if (bg_d and _color_saturation(bg_d) > 0.3 and _is_dark_color(bg_d)
+            and _color_luminance(bg_d) >= 0.08):
         current_primary = colors.get("primary", "")
-        # 当前primary如果是浅色/亮色(如金色文字FFD700),它更像是accent而非primary
-        if not _is_dark_color(current_primary) or current_primary in hardcoded_defaults:
-            # 把当前primary降级为accent(如果它够饱和)
-            if _color_saturation(current_primary) > 0.3:
-                colors["accent"] = current_primary
+        if current_primary in hardcoded_defaults or _is_neutral_gray(current_primary):
             colors["primary"] = bg_d
 
     # Step 3: 从文本颜色补充text_dark / text_light
@@ -423,7 +451,9 @@ def _extract_shape_fill_data(zf: zipfile.ZipFile, slide_w: int, slide_h: int) ->
 
 
 def _is_neutral_gray(hex_color: str) -> bool:
-    """判断是否接近中性灰(饱和度极低，R≈G≈B)"""
+    """判断是否接近中性灰(饱和度极低，R≈G≈B)。排除纯黑纯白——它们是极端基准色而非中性灰。"""
+    if hex_color.upper() in {"000000", "FFFFFF"}:
+        return False
     return _color_saturation(hex_color) < 0.12
 
 
