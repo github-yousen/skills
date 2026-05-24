@@ -106,7 +106,14 @@ def _extract_slide_size(zf: zipfile.ZipFile) -> dict:
 
 
 def _extract_colors(zf: zipfile.ZipFile) -> dict:
-    """提取配色方案：从theme1.xml + 幻灯片背景/形状填充"""
+    """提取配色方案：优先从幻灯片实际设计提取，theme1.xml仅作兜底
+    
+    核心逻辑：
+    1. 先从幻灯片背景提取真实背景色
+    2. 再从文本颜色提取真实文字色
+    3. 从形状填充提取主色/强调色
+    4. theme1.xml的clrScheme仅作为兜底（Office默认主题不代表实际设计）
+    """
     colors = {
         "primary": "1E2761",
         "secondary": "CADCFC",
@@ -117,65 +124,7 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
         "text_light": "FFFFFF",
     }
 
-    # 从 theme1.xml 提取配色方案
-    theme_path = "ppt/theme/theme1.xml"
-    if theme_path in [n for n in zf.namelist()]:
-        try:
-            theme_xml = zf.read(theme_path).decode("utf-8")
-            dom = defusedxml.minidom.parseString(theme_xml)
-
-            # 提取 clrScheme
-            clr_schemes = dom.getElementsByTagName("a:clrScheme")
-            if not clr_schemes:
-                # 尝试不带命名空间
-                clr_schemes = dom.getElementsByTagName("clrScheme")
-
-            if clr_schemes:
-                scheme = clr_schemes[0]
-                color_map = {}
-                for child in scheme.childNodes:
-                    if child.nodeType != child.ELEMENT_NODE:
-                        continue
-                    tag = child.tagName.split(":")[-1] if ":" in child.tagName else child.tagName
-                    # 查找 srgbClr 或 sysClr
-                    for sub in child.childNodes:
-                        if sub.nodeType != sub.ELEMENT_NODE:
-                            continue
-                        sub_tag = sub.tagName.split(":")[-1] if ":" in sub.tagName else sub.tagName
-                        if sub_tag == "srgbClr":
-                            val = sub.getAttribute("val")
-                            if val:
-                                color_map[tag] = val
-                        elif sub_tag == "sysClr":
-                            val = sub.getAttribute("lastClr")
-                            if val:
-                                color_map[tag] = val
-
-                # 映射到我们的配色结构
-                mapping = {
-                    "dk1": "text_dark",
-                    "lt1": "bg_light",
-                    "dk2": "primary",
-                    "lt2": "secondary",
-                    "accent1": "accent",
-                    "accent2": "accent",
-                    "accent3": "accent",
-                    "hlink": "accent",
-                }
-                for src, dst in mapping.items():
-                    if src in color_map and dst not in color_map:
-                        colors[dst] = color_map[src]
-
-                # text_light = lt1 的反色
-                if "lt1" in color_map:
-                    colors["text_light"] = color_map["lt1"]
-                if "dk1" in color_map:
-                    colors["bg_dark"] = color_map["dk1"]
-
-        except Exception as e:
-            print(f"Warning: theme提取失败: {e}", file=sys.stderr)
-
-    # 从幻灯片背景补充
+    # ===== 第1步：从幻灯片背景提取真实背景色（优先级最高）=====
     bg_colors = _extract_bg_colors(zf)
     if bg_colors:
         dark_bgs = [c for c in bg_colors if _is_dark_color(c)]
@@ -185,7 +134,7 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
         if light_bgs:
             colors["bg_light"] = Counter(light_bgs).most_common(1)[0][0]
 
-    # 从文本颜色补充
+    # ===== 第2步：从文本颜色提取真实文字色 =====
     text_colors = _extract_text_colors(zf)
     if text_colors:
         dark_texts = [c for c in text_colors if _is_dark_color(c)]
@@ -194,6 +143,83 @@ def _extract_colors(zf: zipfile.ZipFile) -> dict:
             colors["text_dark"] = Counter(dark_texts).most_common(1)[0][0]
         if light_texts:
             colors["text_light"] = Counter(light_texts).most_common(1)[0][0]
+
+    # ===== 第3步：从形状填充提取主色/强调色 =====
+    shape_colors = _extract_shape_fill_colors(zf)
+    
+    def _saturation(hex_c):
+        """计算颜色饱和度（0-1），灰色接近0，鲜艳色接近1"""
+        r, g, b = int(hex_c[:2], 16), int(hex_c[2:4], 16), int(hex_c[4:6], 16)
+        mx, mn = max(r, g, b), min(r, g, b)
+        return 0 if mx == 0 else (mx - mn) / mx
+    
+    if shape_colors:
+        # 只排除纯通用色（纯白/纯黑/纯深灰），不排除bg_light/bg_dark
+        # 因为彩色背景可能就是主题主色（如00D4FF既是章节背景色也是主色）
+        exclude = {"FFFFFF", "000000"}
+        # 排除低饱和度灰色（饱和度<0.15的中间灰不算主题色）
+        candidates = [(c, cnt) for c, cnt in Counter(shape_colors).most_common(15)
+                      if c not in exclude and _saturation(c) >= 0.15]
+        if candidates:
+            colors["primary"] = candidates[0][0]
+        if len(candidates) > 1:
+            colors["accent"] = candidates[1][0]
+        if len(candidates) > 2:
+            colors["secondary"] = candidates[2][0]
+    
+    # 如果形状填充色没提取到候选者，从文本颜色中找非通用色作为主色
+    if colors["primary"] == "1E2761" and text_colors:
+        text_counter = Counter(text_colors)
+        exclude = {"FFFFFF", "000000", "333333", "666666", "999999"}
+        text_candidates = [(c, cnt) for c, cnt in text_counter.most_common(10)
+                          if c not in exclude and _saturation(c) >= 0.15]
+        if text_candidates:
+            colors["primary"] = text_candidates[0][0]
+            if len(text_candidates) > 1:
+                colors["accent"] = text_candidates[1][0]
+
+    # ===== 第4步：theme1.xml 仅作兜底补充（只填充仍为默认值的字段）=====
+    theme_path = "ppt/theme/theme1.xml"
+    if theme_path in [n for n in zf.namelist()]:
+        try:
+            theme_xml = zf.read(theme_path).decode("utf-8")
+            dom = defusedxml.minidom.parseString(theme_xml)
+
+            clr_schemes = dom.getElementsByTagName("a:clrScheme")
+            if not clr_schemes:
+                clr_schemes = dom.getElementsByTagName("clrScheme")
+
+            if clr_schemes:
+                scheme = clr_schemes[0]
+                theme_color_map = {}
+                for child in scheme.childNodes:
+                    if child.nodeType != child.ELEMENT_NODE:
+                        continue
+                    tag = child.tagName.split(":")[-1] if ":" in child.tagName else child.tagName
+                    for sub in child.childNodes:
+                        if sub.nodeType != sub.ELEMENT_NODE:
+                            continue
+                        sub_tag = sub.tagName.split(":")[-1] if ":" in sub.tagName else sub.tagName
+                        if sub_tag == "srgbClr":
+                            val = sub.getAttribute("val")
+                            if val:
+                                theme_color_map[tag] = val
+                        elif sub_tag == "sysClr":
+                            val = sub.getAttribute("lastClr")
+                            if val:
+                                theme_color_map[tag] = val
+
+                # 仅对仍为默认值的字段做兜底
+                default_vals = {"primary": "1E2761", "secondary": "CADCFC", "accent": "0891B2",
+                                "bg_dark": "1E2761", "bg_light": "FFFFFF", "text_dark": "212121", "text_light": "FFFFFF"}
+                mapping = {"dk2": "primary", "lt2": "secondary", "accent1": "accent",
+                           "dk1": "bg_dark", "lt1": "bg_light"}
+                for src, dst in mapping.items():
+                    if src in theme_color_map and colors[dst] == default_vals[dst]:
+                        colors[dst] = theme_color_map[src]
+
+        except Exception as e:
+            print(f"Warning: theme提取失败: {e}", file=sys.stderr)
 
     return colors
 
@@ -240,6 +266,30 @@ def _extract_text_colors(zf: zipfile.ZipFile) -> list:
             # 用正则提取 srgbClr val（比DOM快）
             matches = re.findall(r'<a:srgbClr\s+val="([A-Fa-f0-9]{6})"', xml)
             colors.extend([m.upper() for m in matches])
+        except Exception:
+            continue
+
+    return colors
+
+
+def _extract_shape_fill_colors(zf: zipfile.ZipFile) -> list:
+    """从形状填充中提取颜色（用于识别主色和强调色）
+    
+    注意：python-pptx生成的形状用<p:spPr>而非<a:spPr>，需兼容两种标签
+    """
+    colors = []
+    slide_pattern = re.compile(r"^ppt/slides/slide\d+\.xml$")
+    slide_files = sorted([n for n in zf.namelist() if slide_pattern.match(n)])
+
+    for sf in slide_files:
+        try:
+            xml = zf.read(sf).decode("utf-8")
+            # 使用正则提取所有形状填充色（兼容 a:spPr 和 p:spPr）
+            fills = re.findall(
+                r'<(?:a|p):spPr>.*?<a:solidFill>\s*<a:srgbClr\s+val="([A-Fa-f0-9]{6})"',
+                xml, re.DOTALL
+            )
+            colors.extend([f.upper() for f in fills])
         except Exception:
             continue
 
@@ -362,8 +412,6 @@ def _extract_transitions(zf: zipfile.ZipFile) -> dict:
 def _extract_animations(zf: zipfile.ZipFile) -> list:
     """提取动画效果"""
     animations = []
-    slide_pattern = re.compile(r"^ppt/slides/slide\d+\.xml$")
-    slide_files = sorted([n for n in zf.namelist() if slide_pattern.match(slide_pattern.pattern)])
     slide_files = sorted([n for n in zf.namelist() if re.match(r"^ppt/slides/slide\d+\.xml$", n)])
 
     anim_types = Counter()
@@ -376,15 +424,33 @@ def _extract_animations(zf: zipfile.ZipFile) -> list:
             if "<p:timing>" not in xml and "<timing>" not in xml:
                 continue
 
-            # 提取动画类型
-            # 常见动画标签: anim, animEffect, animMotion, set
+            # 提取 animEffect 类型（如 fade, wipe 等）
             effects = re.findall(r'<p:animEffect[^>]*transition="([^"]*)"', xml)
             for eff in effects:
-                anim_types[eff] += 1
+                anim_types[f"effect:{eff}"] += 1
 
-            # 提取触发方式
-            click_triggers = xml.count('p:click') + xml.count('advTm')
-            after_triggers = xml.count('afterPrevious')
+            # 提取 animMotion（路径动画）
+            motions = re.findall(r'<p:animMotion[^>]*>', xml)
+            if motions:
+                anim_types["motion_path"] += len(motions)
+
+            # 提取 presetID 对应的动画类型（出现、消失、强调等）
+            # presetClass: entr(进入), exit(退出), emph(强调), motion(路径)
+            preset_map = {"entr": "enter", "exit": "exit", "emph": "emphasize", "motion": "motion_path"}
+            presets = re.findall(r'presetClass="(\w+)"', xml)
+            for p in presets:
+                if p in preset_map:
+                    anim_types[preset_map[p]] += 1
+
+            # 提取 <p:set> 动画（出现/隐藏动画最常见的形式）
+            set_count = xml.count("<p:set>")
+            if set_count > 0:
+                anim_types["appear/disappear"] += set_count
+
+            # 提取 <p:anim> 数值动画（缩放、旋转、透明度等）
+            anim_count = xml.count("<p:anim")
+            if anim_count > 0:
+                anim_types["value_animation"] += anim_count
 
         except Exception:
             continue
@@ -544,9 +610,14 @@ def _classify_slide(idx: int, total: int, texts: list, bg_color: str, elements: 
     if any(kw.lower() in combined for kw in toc_keywords):
         return "toc"
 
-    # 章节分隔页：暗背景+少量文字
-    if bg_color and _is_dark_color(bg_color) and len(texts) <= 3:
-        return "section"
+    # 章节分隔页：少量文字 + 背景色与前后页明显不同（不限于暗色）
+    if bg_color and len(texts) <= 3:
+        # 暗背景+少量文字 → 章节
+        if _is_dark_color(bg_color):
+            return "section"
+        # 亮色/强调色背景+少量文字+有正文标题感 → 也是章节（如暗色科技风的亮色章节页）
+        if len(texts) >= 1 and len(texts[0]) <= 20:
+            return "section"
 
     # 数据展示：有图表元素
     has_chart = any(e.get("type") == "graphicFrame" for e in elements)
