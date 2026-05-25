@@ -1,103 +1,181 @@
-# PPT生成规范指南
+# PPT 规范生成指南 (v4.1)
+
+本文档说明 `generate_from_spec.js` 如何根据 spec.json 生成新PPT。
 
 ## 核心原则
 
-**有模板参考，无模板自由。模板是参考底色，不是紧箍咒。**
-
-模板提供的是**风格规范**（配色气质、字体品味、布局骨架），新内容本身决定了页面怎么组织。
-参考模板 ≠ 1:1死板复刻，而是保持气质一致、风格延续。
-
----
-
-## 自由度系统
-
-### 三级自由度
-
-| 自由度 | 配色 | 字体 | 布局 | 动画 | 适用场景 |
-|--------|------|------|------|------|----------|
-| **高**（默认） | 保持色系气质，可调明度/饱和度/换同系色 | 保持气质，可换同类型字体 | 保持骨架，可调比例/留白/换布局变体 | 可自由设计，保持风格 | 日常使用、灵活展示 |
-| **中** | 主色照搬，辅色/强调色可微调 | 标题字体照搬，正文可调 | 布局模式照搬，细节可调 | 转场照搬，元素动画可调 | 部门内统一风格 |
-| **低** | 照搬模板配色 | 照搬模板字体 | 高度还原模板布局 | 照搬模板动画 | 品牌要求严格、客户指定 |
-
-### 默认行为
-
-- **默认自由度 = 高**
-- 用户说"照着做"、"尽量一样"、"一模一样" → 低
-- 用户说"参考着来"、"风格类似就行" → 高
-- 用户未指定 → 高
-
----
-
-## 无模板时的自由发挥
-
-无模板不等于乱做，遵循以下设计原则：
-
-### 配色方案选择
-
-根据PPT主题自动匹配：
-- **商务汇报**：深蓝主色 + 浅蓝辅色 + 橙色强调
-- **产品发布**：深色主色 + 渐变辅色 + 亮色强调
-- **教育培训**：绿色主色 + 浅绿辅色 + 黄色强调
-- **科技互联网**：暗色主色 + 霓虹辅色 + 青色强调
-- **通用**：深蓝主色 + 灰蓝辅色 + 琥珀强调
-
-### 布局原则
-
-1. **封面**：暗色背景 + 居中大标题 + 装饰线/装饰图形
-2. **目录**：亮色背景 + 左侧装饰条 + 序号圆/列表
-3. **章节页**：暗色背景 + 居中标题 + 装饰线
-4. **内容页**：主色标题栏 + 白底正文区 + 底部装饰线
-5. **数据页**：卡片式展示 + 左侧装饰条 + 大数字
-6. **结尾页**：暗色背景 + 居中感谢语 + 联系方式
-
-### 通用设计规则
-
-- 字号下限：正文 ≥ 10pt，标题 ≥ 24pt
-- 边距保护：内容不超出 0.5 inch 边距
-- 色彩对比度：文字与背景 WCAG AA 标准
-- 一页一主题：每页聚焦一个要点
-- 装饰克制：装饰服务于内容，不喧宾夺主
-
----
-
-## 有模板时的参考逻辑
-
-### 参考什么
-
-从 spec.json 中提取的规范，**参考的核心是气质，不是像素**：
-
-| 维度 | 参考方式 |
-|------|---------|
-| 配色 | 参考色系的**冷暖/明暗气质**，不是死用具体色值 |
-| 字体 | 参考字体的**衬线/无衬线/粗细气质**，不是死用具体字体 |
-| 布局 | 参考布局的**骨架结构**（标题位置、内容分区），不是死用坐标 |
-| 动画 | 参考动画的**风格节奏**（简约/丰富/快速/缓慢），不是死用具体效果 |
-| 目录 | 参考目录的**组织方式**（有/无、章节粒度），不是死用章节名 |
-
-### 自由度的影响
-
-**高自由度**（默认）：
-- 配色：保持色系 → 主色是深蓝就继续用深蓝系，但可以微调明暗
-- 字体：保持气质 → 模板用无衬线就继续用无衬线，可以换具体字体
-- 布局：保持骨架 → 封面居中大标题的骨架不变，但可以加装饰元素
-- 动画：保持节奏 → 模板简约就继续简约，但具体效果可以换
-
-**中自由度**：
-- 配色：主色原样，辅色和强调色可微调
-- 字体：标题字体原样，正文可换
-- 布局：布局模式原样（如标题在顶部），具体位置微调
-- 动画：转场原样，元素动画可增减
-
-**低自由度**：
-- 配色、字体、布局、动画尽可能还原模板
-- 但仍然不是像素级复制——内容不同，页面自然不同
-
----
+**spec是参考，不是蓝图。** 生成时根据自由度等级灵活参考spec中的各维度信息。
 
 ## 生成流程
 
-1. **判断是否有模板**
-2. **确定自由度**
-3. **内容规划**：根据内容分配页面类型和数量
-4. **生成PPT**：使用 pptxgenjs API
-5. **QA验证**：缩略图预览 + 配色/字体/布局检查
+```
+1. 读取spec.json + content.json
+2. 根据自由度确定各维度的参考程度
+3. 规划页面结构（封面→目录→章节→内容→结尾）
+4. 逐页生成，每页根据类型选择布局模板
+5. 应用配色/字体/排版/装饰
+6. 输出PPTX
+```
+
+## 自由度实现细节
+
+### 配色
+
+```javascript
+// 低自由度：照搬spec配色
+primary = spec.colors.primary;  // RGB偏移±0
+
+// 中自由度：主色照搬，辅色微调
+primary = adjustColor(spec.colors.primary, ±5);
+secondary = adjustColor(spec.colors.secondary, ±5);
+
+// 高自由度：保持色系，可调整明度/饱和度
+primary = adjustColor(spec.colors.primary, ±15);
+secondary = adjustColor(spec.colors.secondary, ±15);
+```
+
+### 字体
+
+```javascript
+// 低自由度：照搬字体（含东亚字体）
+titleFont = spec.fonts.title.name;
+titleEaFont = spec.fonts.title.ea_name;
+
+// 中自由度：标题照搬，正文可调
+titleFont = spec.fonts.title.name;
+bodyFont = spec.fonts.body.name;  // 可换同类型
+
+// 高自由度：保持气质，可换同类型字体
+// 如 Arial → Calibri, 微软雅黑 → 思源黑体
+```
+
+### 排版
+
+```javascript
+// 低自由度：照搬行距/对齐/列表样式
+lineSpacing = spec.typography.line_spacing;
+alignment = spec.typography.alignment;
+bulletChar = spec.text_styles.list.default_type;
+
+// 中自由度：参考但可微调
+lineSpacing = spec.typography.line_spacing * 1.05;  // 微调
+
+// 高自由度：参考但灵活调整
+// 根据内容量自动调整行距
+```
+
+### 布局
+
+```javascript
+// 低自由度：照搬布局模式，从spec.patterns中选择频率最高的
+layoutPattern = spec.layout.patterns[0].name;
+
+// 中自由度：照搬布局模式，细节可调
+// 可调整间距、比例
+
+// 高自由度：保持骨架，可换布局变体
+// 根据内容自动选择最合适的布局
+```
+
+### 装饰
+
+```javascript
+// 低自由度：照搬装饰元素
+decoShapes = spec.decorations.shapes;
+pageNumbers = spec.decorations.page_numbers;
+logoAreas = spec.decorations.logo_areas;
+
+// 中自由度：参考装饰量
+// 可增减具体装饰元素
+
+// 高自由度：可自由设计装饰
+// 保持风格一致即可
+```
+
+### 渐变
+
+```javascript
+// 低自由度：照搬渐变
+gradients = spec.gradients;
+
+// 中自由度：参考渐变类型和方向
+// 配色可微调
+
+// 高自由度：可替换渐变配色
+// 保持渐变类型和方向
+```
+
+## 布局模板系统
+
+### 页面类型与布局对应
+
+| 页面类型 | 布局模板 | 生成函数 |
+|---------|---------|---------|
+| 封面 (cover) | centered-title / split-image | `_addCoverSlide()` |
+| 目录 (toc) | list-toc / card-toc | `_addTocSlide()` |
+| 章节 (section) | section-center / section-split | `_addSectionSlide()` |
+| 内容 (content) | top-title-bottom-content / two-column | `_addContentSlide()` / `_addTwoColumnSlide()` |
+| 数据 (data) | data-with-title / card-grid | `_addDataSlide()` / `_addCardGridSlide()` |
+| 对比 (comparison) | two-column | `_addTwoColumnSlide()` |
+| 图片 (gallery) | top-image-bottom-text / image-only | `_addImageSlide()` |
+| 结尾 (ending) | centered-ending | `_addEndingSlide()` |
+
+### 布局选择逻辑
+
+1. 根据content.json中的slide type确定页面类型
+2. 如果spec中有布局模式信息，优先使用spec的布局模式
+3. 根据自由度决定是否使用spec布局还是自由选择
+4. 低自由度→严格按spec布局，高自由度→根据内容灵活选择
+
+## 配色应用规则
+
+1. **封面**：使用`bg_dark`作为背景色，`text_light`作为文字色
+2. **章节页**：使用`primary`作为背景色，`text_light`作为文字色
+3. **内容页**：使用`bg_light`作为背景色，`text_dark`作为文字色
+4. **装饰**：使用`primary`/`accent`作为装饰元素色
+5. **渐变**：优先使用spec中的渐变定义
+
+## 字体应用规则
+
+1. 标题：使用`fonts.title`（含ea_name中文字体）
+2. 副标题：使用`fonts.subtitle`
+3. 正文：使用`fonts.body`（含ea_name中文字体）
+4. 中文字体回退：ea_name → 微软雅黑 → SimHei
+
+## 排版应用规则
+
+1. 行距：使用`typography.line_spacing`（低自由度严格照搬）
+2. 对齐：使用`typography.alignment`
+3. 列表符号：使用`text_styles.list.default_type`
+4. 段间距：使用`typography.paragraph_spacing`
+
+## 图片风格应用
+
+1. 根据`image_style.layout_type`决定图片在页面中的占比
+2. 根据`image_style.position_preference`决定图片位置
+3. 低自由度：严格照搬图片风格
+4. 高自由度：根据内容灵活调整
+
+## 渐变应用
+
+1. 优先用于封面和章节页的背景
+2. 根据spec中的渐变方向和起止色
+3. 低自由度：照搬渐变
+4. 高自由度：可替换渐变配色但保持方向
+
+## 从spec到生成的完整映射
+
+```
+spec.colors           → 配色方案（按自由度偏移）
+spec.gradients        → 渐变背景（封面/章节页）
+spec.fonts            → 字体选择（含东亚字体）
+spec.typography       → 行距/对齐/段间距
+spec.text_styles      → 列表符号/文字效果
+spec.layout.patterns  → 布局模式选择
+spec.decorations      → 装饰元素/页码/Logo
+spec.image_style      → 图片风格/位置
+spec.toc_structure    → 目录结构
+spec.master_layouts   → 版式参考
+spec.table_chart_styles → 表格/图表样式
+spec.animations       → 转场效果
+```
