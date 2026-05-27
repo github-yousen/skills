@@ -5,13 +5,18 @@ description: |
   当用户提到"语雀"、"yuque"、"知识库文档"、"查看我的语雀"、"语雀文档"、"语雀知识库"、"yuque文档"、"语雀笔记"、"编辑语雀"、"更新语雀文档"时触发此技能。
   也适用于用户想查看、搜索、创建、编辑、删除语雀文档的任何场景，即使用户没有明确提到"语雀"但上下文暗示在操作语雀平台。
 ---
+
 # 语雀知识库操作技能
 
 通过语雀 Web API 实现知识库和文档的自动化操作，包括查看、搜索、创建、编辑、删除等功能。
 
+> 目标：让 Agent 能稳定区分“用户自己的文档”和“语雀公开搜索”，并在读写大文档、局部编辑、Windows 环境下可靠执行。
+
 ## 前置条件
 
-使用前需要配置语雀凭证。检查本文档所在目录是否存在credentials.json且包含以下信息（如不包含，请用户按照配置方式进行配置）：
+使用前需要配置语雀凭证。脚本读取顺序为：**环境变量优先**，其次读取本文档所在目录下的 `credentials.json`。
+
+需要包含以下信息：
 
 1. **Cookie** - 登录语雀后浏览器的完整 Cookie 字符串
 2. **CSRF Token** - 即 Cookie 中 `yuque_ctoken` 的值
@@ -19,7 +24,15 @@ description: |
 
 ### 凭证配置方式
 
-**credentials.json 文件**（持久使用）
+配置方式由用户决定，脚本同时支持以下两种方式；如果两者都存在，**环境变量优先**。
+
+**方式一：环境变量**（适合临时会话、CI/CD 或不想把凭证落盘的场景）
+
+- `YUQUE_COOKIE`
+- `YUQUE_CSRF_TOKEN`
+- `YUQUE_X_LOGIN`
+
+**方式二：credentials.json 文件**（适合本地长期使用）
 
 在 skill 目录下创建 `credentials.json`：
 
@@ -38,6 +51,20 @@ description: |
 3. 找任意请求 → 复制 Request Headers 中的 Cookie 值
 4. 从 Cookie 中提取 `yuque_ctoken` 的值作为 CSRF Token
 5. 用户 login 在请求头的 `x-login` 字段中
+
+---
+
+## Agent 执行规范
+
+1. **先验证凭证**：首次操作或遇到异常时，先执行 `whoami`。
+2. **找用户自己的文档**：优先用 `find-docs <keyword>` 在用户自己的知识库中查找；不要用 `search`，它是全站公开搜索。
+3. **搜索公开内容**：只有用户明确要搜语雀公开资料时，才使用 `search`。
+4. **读取正文**：`get-doc` 必须使用 `mode=edit`，否则拿不到 `body`。
+5. **大文档读取**：优先使用 `--body-only --output-file`，避免 Windows 管道或 JSON 输出过大失败。
+6. **整篇更新**：长内容先写入 HTML 文件，再用 `update-doc --body-file`。
+7. **局部更新**：优先用 `get-doc-outline` 定位标题，再用 `replace-section` 只替换目标 section。
+8. **删除文档**：属于破坏性操作，必须先向用户确认目标文档标题、`doc_id` 和 `book_id`。
+9. **凭证失效**：返回 `401/403` 时，提示用户重新获取 Cookie 和 `yuque_ctoken`。
 
 ---
 
@@ -71,6 +98,18 @@ python {skill_dir}/scripts/yuque_client.py list-docs <book_id> [offset] [limit]
 - `offset` - 偏移量，默认0
 - `limit` - 每页数量，默认20
 
+### 快捷：在用户自己的所有知识库中查找文档
+
+```bash
+python {skill_dir}/scripts/yuque_client.py find-docs <keyword> [page_limit] [max_pages]
+```
+
+内部会自动遍历用户自己的所有知识库并分页匹配文档 `title` / `slug` / `description`，返回匹配文档的 `doc_id`、`book_id`、知识库名称等信息。
+
+- `keyword` - 标题、slug 或描述中的关键词
+- `page_limit` - 每页拉取数量，默认100，最大100
+- `max_pages` - 每个知识库最多分页次数，默认50
+
 ### 4. 获取知识库目录结构
 
 ```bash
@@ -98,7 +137,7 @@ python {skill_dir}/scripts/yuque_client.py search <keyword> [type]
 - `keyword` - 搜索关键词
 - `type` - `doc`(文档, 默认) 或 `book`(知识库)
 
-⚠️ **注意：search 是语雀全站公开搜索，会返回所有用户的公开文档。当用户要找自己的文档时，不要用 search，应走"工作流3"（list-books → list-docs 按标题匹配）。**
+⚠️ **注意：`search` 是语雀全站公开搜索，会返回所有用户的公开文档。当用户要找自己的文档时，不要用 `search`，应使用 `find-docs`。**
 
 ### 7. 创建文档
 
@@ -144,44 +183,57 @@ python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
 
 ---
 
-## 常见工作流
+## 推荐工作流
 
 ### 工作流1：浏览知识库内容
 
 ```
-1. list-books → 找到目标知识库 id
-2. get-toc <book_id> → 查看目录结构
-3. list-docs <book_id> → 获取文档列表
-4. get-doc <doc_id> <book_id> edit → 读取具体文档内容
+1. whoami → 确认凭证有效
+2. list-books → 找到目标知识库 id
+3. get-toc <book_id> → 查看目录结构
+4. list-docs <book_id> [offset] [limit] → 获取文档列表，必要时分页
+5. get-doc <doc_id> <book_id> edit → 读取具体文档内容
 ```
 
-### 工作流2：创建并编辑文档
+### 工作流2：查找用户自己的文档
+
+**当用户说“找我的文档”“看我的 XX 文档”“我的语雀里有篇……”等表达时，优先用 `find-docs`，不要用 `search`。**
+
+```
+1. find-docs <keyword> → 在用户自己的所有知识库中查找匹配文档
+2. 从 matches 中确认目标文档的 doc_id 和 book_id
+3. get-doc <doc_id> <book_id> edit → 读取具体文档内容
+```
+
+### 工作流3：局部编辑文档某一节（推荐）
+
+**最常用的安全编辑方式：只替换目标 section，不触碰其它内容。**
+
+```
+1. get-doc-outline <doc_id> <book_id> → 查看文档标题层级
+2. 准备新内容（Markdown 或 Lake HTML）
+3a. Markdown：md2lake --input-file content.md --output-file section.html
+3b. HTML：直接准备 section.html
+4. replace-section <doc_id> <book_id> --heading "目标标题" --body-file section.html
+```
+
+### 工作流4：创建并更新整篇文档
 
 ```
 1. list-books → 确认目标知识库 id
 2. get-toc <book_id> → 查看当前目录，确定放置位置
 3. create-doc <book_id> "文档标题" → 创建文档
-4. update-doc <doc_id> <book_id> "新标题" "新内容" → 编辑文档
+4. md2lake --input-file content.md --output-file body.html → 将 Markdown 转为 Lake HTML
+5. update-doc <doc_id> <book_id> "文档标题" --body-file body.html → 更新整篇内容
 ```
 
-### 工作流3：查找用户自己的文档并更新
+### 工作流5：搜索语雀公开文档
 
-**当用户说"找我的文档"、"看我的XX文档"、"我的语雀里有篇…"等表达时，必须走此流程，不要用 search 命令（search 是全站公开搜索，会搜到别人的文档）。**
-
-```
-1. list-books → 获取用户所有知识库
-2. list-docs <book_id> → 遍历知识库（可并行多个），按标题匹配目标文档
-3. get-doc <doc_id> <book_id> edit → 读取具体文档内容
-4. update-doc <doc_id> <book_id> "新标题" "新内容" → 更新文档（如需）
-```
-
-### 工作流4：搜索语雀公开文档
-
-**仅当用户明确要搜索语雀平台上的公开内容（非自己知识库）时才使用 search 命令。**
+**仅当用户明确要搜索语雀平台上的公开内容（非自己知识库）时才使用 `search` 命令。**
 
 ```
 1. search <keyword> → 全站搜索公开文档
-2. 根据搜索结果获取文档详情
+2. 根据搜索结果判断是否需要继续读取详情
 ```
 
 ---
@@ -195,8 +247,9 @@ python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
 5. **分页** - 文档列表默认每页20条，知识库文档多时需要分页获取
 6. **v2 API 不可用** - `/api/v2/` 路径需要 OAuth Token，Cookie 方式只能用 v1 API
 7. **写操作需 CSRF Token** - POST/PUT/DELETE 操作必须携带有效的 x-csrf-token
-8. **body vs body_draft** - 语雀有两套存储：`body`（已发布内容）和 `body_draft`（编辑器草稿）。前端渲染优先用 `body_draft`。本脚本的 `update-doc` 已通过 `/api/docs/:id/content` 接口自动同步两者
+8. **body vs body_draft** - 语雀有两套存储：`body`（已发布内容）和 `body_draft`（编辑器草稿）。前端渲染优先用 `body_draft`。本脚本的 `update-doc` 和 `replace-section` 已自动同步两者
 9. **长内容用 --body-file** - 命令行参数有长度限制（Windows ~8000字节），长文档内容应先写入临时文件，用 `--body-file /path/to/file.html` 传入
+10. **优先局部编辑** - 修改长文档时优先使用 `get-doc-outline` + `replace-section`，降低误覆盖整篇文档的风险
 
 ---
 
@@ -209,3 +262,74 @@ python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
 | 脚本            | 路径                        | 用途                                |
 | --------------- | --------------------------- | ----------------------------------- |
 | yuque_client.py | `scripts/yuque_client.py` | 语雀 API 命令行客户端，支持所有操作 |
+
+---
+
+## 高级功能
+
+### 11. 获取文档标题层级结构
+
+```bash
+python {skill_dir}/scripts/yuque_client.py get-doc-outline <doc_id> <book_id>
+```
+
+快速查看文档骨架，无需下载完整 body。输出纯文本层级结构。
+
+### 12. 局部替换文档 section
+
+```bash
+python {skill_dir}/scripts/yuque_client.py replace-section <doc_id> <book_id> --heading "Questions" --body-file /path/to/new_section.html
+```
+
+按 heading 文本定位 section 边界（从该 heading 到下一个同级或更高级 heading），替换该区间内容。适合只改一节而不触碰其他内容。
+
+### 13. Markdown 转 lake HTML
+
+```bash
+python {skill_dir}/scripts/yuque_client.py md2lake --input-file content.md
+python {skill_dir}/scripts/yuque_client.py md2lake "## 标题\n正文"
+```
+
+将 Markdown 转为语雀 lake HTML 格式。支持：标题、加粗/斜体、行内代码、引用块、有序/无序列表、代码块、分割线。
+
+**推荐搭配 update-doc 使用**：先 md2lake 转格式，再 update-doc --body-file 上传。
+
+### 全局参数
+
+任何命令均可附加以下参数：
+
+| 参数 | 说明 |
+|------|------|
+| `--output-file <path>` | 结果输出到文件而非 stdout（解决 Windows 管道大 JSON 失败问题） |
+| `--body-only` | 仅用于 `get-doc`，输出纯 body HTML 而非 JSON 包装 |
+
+示例：
+```bash
+python {skill_dir}/scripts/yuque_client.py get-doc 12345 67890 edit --body-only --output-file body.html
+```
+
+---
+
+## Lake HTML 格式速查
+
+| Markdown | Lake HTML |
+|----------|-----------|
+| `# 标题` | `<h1><span class="ne-text">标题</span></h1>` |
+| `普通段落` | `<p class="ne-p"><span class="ne-text">普通段落</span></p>` |
+| `**加粗**` | `<strong><span class="ne-text">加粗</span></strong>` |
+| `*斜体*` | `<em><span class="ne-text">斜体</span></em>` |
+| `` `code` `` | `<code class="ne-code"><span class="ne-text">code</span></code>` |
+| `> 引用` | `<div class="ne-quote"><p class="ne-p"><span class="ne-text">引用</span></p></div>` |
+| `- 列表项` | `<ul class="ne-ul"><li data-lake-index-type="0"><span class="ne-text">列表项</span></li></ul>` |
+| `1. 有序` | `<ol class="ne-ol"><li data-lake-index-type="0"><span class="ne-text">有序</span></li></ol>` |
+| `---` | `<hr class="ne-hr" />` |
+| 空行 | `<p class="ne-p"><br></p>` |
+
+---
+
+## Windows 环境注意事项
+
+1. **管道输出大 JSON 失败**：Windows 下 `cmd | python -c "..."` 对大文档（>50KB）经常因编码或 buffer 问题报 JSONDecodeError。**解决方案**：使用 `--output-file` 参数直接写文件。
+2. **命令行长度限制**：Windows cmd 参数上限约 8000 字节。长内容必须用 `--body-file` 从文件读取。
+3. **避免复杂内联命令**：正文、Markdown、HTML 等长内容不要直接塞进命令参数，先写入文件再传路径。
+4. **编码**：脚本已自动设置 stdout 为 utf-8，但建议在 PowerShell 或 Git Bash 中运行（比 cmd.exe 编码支持好）。
