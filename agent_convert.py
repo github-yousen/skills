@@ -42,9 +42,11 @@ available-tools。
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import sys
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -58,6 +60,52 @@ try:
 except Exception:
     yaml = None  # type: ignore
     _HAS_YAML = False
+
+
+# ----------------------------------------------------------------------------
+# 终端着色: ANSI 转义,自动按是否 TTY / NO_COLOR 降级
+# ----------------------------------------------------------------------------
+def _enable_ansi_on_windows() -> bool:
+    """Windows 10+ / Windows Terminal / PowerShell 7 默认开启 VT;旧 cmd 尝试启用。"""
+    if os.name != "nt":
+        return True
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        # ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+        for handle_id in (-11, -12):  # STDOUT, STDERR
+            handle = kernel32.GetStdHandle(handle_id)
+            mode = ctypes.c_ulong()
+            if kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+                kernel32.SetConsoleMode(handle, mode.value | 0x0004)
+        return True
+    except Exception:
+        return False
+
+
+_COLOR_ON = (
+    sys.stdout.isatty()
+    and os.environ.get("NO_COLOR") is None
+    and os.environ.get("TERM") != "dumb"
+    and _enable_ansi_on_windows()
+)
+
+
+def _c(text: str, *codes: str) -> str:
+    if not _COLOR_ON or not codes:
+        return text
+    return f"\x1b[{';'.join(codes)}m{text}\x1b[0m"
+
+
+# 语义化封装,调用处更清楚
+def _bold(s: str) -> str:    return _c(s, "1")
+def _dim(s: str) -> str:     return _c(s, "2")
+def _red(s: str) -> str:     return _c(s, "31")
+def _green(s: str) -> str:   return _c(s, "32")
+def _yellow(s: str) -> str:  return _c(s, "33")
+def _blue(s: str) -> str:    return _c(s, "34")
+def _magenta(s: str) -> str: return _c(s, "35")
+def _cyan(s: str) -> str:    return _c(s, "36")
 
 try:  # py 3.11+
     import tomllib  # type: ignore
@@ -288,20 +336,110 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
 
 def _simple_yaml_parse(text: str) -> Dict[str, Any]:
     result: Dict[str, Any] = {}
-    for line in text.splitlines():
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         if not line.strip() or line.lstrip().startswith("#"):
+            i += 1
             continue
         if ":" not in line:
+            i += 1
             continue
         key, _, value = line.partition(":")
         key = key.strip()
         value = value.strip()
-        if (value.startswith('"') and value.endswith('"')) or (
-            value.startswith("'") and value.endswith("'")
-        ):
-            value = value[1:-1]
+
+        block_style = _yaml_block_scalar_style(value)
+        if block_style:
+            value, i = _parse_yaml_block_scalar(lines, i + 1, line, block_style)
+            result[key] = value
+            continue
+
+        value = _decode_yaml_scalar(value)
         result[key] = value
+        i += 1
     return result
+
+
+def _yaml_block_scalar_style(value: str) -> str:
+    if not value or value[0] not in "|>":
+        return ""
+    if re.fullmatch(r"[|>](?:[1-9])?[+-]?", value) or re.fullmatch(r"[|>][+-]?(?:[1-9])?", value):
+        return value[0]
+    return ""
+
+
+def _parse_yaml_block_scalar(
+    lines: List[str], start: int, header_line: str, style: str
+) -> Tuple[str, int]:
+    parent_indent = len(header_line) - len(header_line.lstrip(" "))
+    block_indent: Optional[int] = None
+    block_lines: List[str] = []
+    i = start
+
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        current_indent = len(line) - len(line.lstrip(" "))
+
+        if stripped and current_indent <= parent_indent:
+            break
+
+        if stripped and block_indent is None:
+            block_indent = current_indent
+
+        if block_indent is None:
+            block_lines.append("")
+        elif stripped and current_indent < block_indent:
+            break
+        elif current_indent >= block_indent:
+            block_lines.append(line[block_indent:])
+        else:
+            block_lines.append("")
+        i += 1
+
+    value = "\n".join(block_lines)
+    if style == ">":
+        value = _fold_yaml_lines(block_lines)
+    return value.rstrip("\n"), i
+
+
+def _fold_yaml_lines(lines: List[str]) -> str:
+    folded: List[str] = []
+    paragraph: List[str] = []
+
+    for line in lines:
+        if line == "":
+            if paragraph:
+                folded.append(" ".join(paragraph))
+                paragraph = []
+            folded.append("")
+        else:
+            paragraph.append(line)
+
+    if paragraph:
+        folded.append(" ".join(paragraph))
+    return "\n".join(folded)
+
+
+def _decode_yaml_scalar(value: str) -> str:
+    # YAML 双引号字符串: 需要把 \" \\ \n \t \r 等转义还原,
+    # 否则在没装 PyYAML 时解析与 render_yaml_frontmatter 写出的内容不对称,
+    # 会导致同步脚本误判"内容冲突"。
+    if value.startswith('"') and value.endswith('"') and len(value) >= 2:
+        inner = value[1:-1]
+        # 标准 YAML 双引号转义子集,够用即可
+        return (inner
+                .replace('\\"', '"')
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\\\", "\\"))
+    # YAML 单引号字符串: 内部 '' → '
+    if value.startswith("'") and value.endswith("'") and len(value) >= 2:
+        return value[1:-1].replace("''", "'")
+    return value
 
 
 def render_yaml_frontmatter(fm: Dict[str, Any]) -> str:
@@ -317,19 +455,37 @@ def render_yaml_frontmatter(fm: Dict[str, Any]) -> str:
 
 
 def _simple_yaml_dump(d: Dict[str, Any]) -> str:
-    out: List[str] = []
-    for k, v in d.items():
-        if isinstance(v, bool):
-            out.append(f"{k}: {'true' if v else 'false'}")
-        elif isinstance(v, (int, float)):
-            out.append(f"{k}: {v}")
-        elif isinstance(v, dict):
-            out.append(f"{k}:")
-            for sk, sv in v.items():
-                out.append(f"  {sk}: {_yaml_scalar(sv)}")
-        else:
-            out.append(f"{k}: {_yaml_scalar(v)}")
+    out = _simple_yaml_dump_lines(d)
     return "\n".join(out) + "\n"
+
+
+def _simple_yaml_dump_lines(d: Dict[str, Any], indent: int = 0) -> List[str]:
+    out: List[str] = []
+    prefix = "  " * indent
+    child_prefix = "  " * (indent + 1)
+
+    for k, v in d.items():
+        key = f"{prefix}{k}"
+        if isinstance(v, bool):
+            out.append(f"{key}: {'true' if v else 'false'}")
+        elif isinstance(v, (int, float)):
+            out.append(f"{key}: {v}")
+        elif isinstance(v, dict):
+            out.append(f"{key}:")
+            out.extend(_simple_yaml_dump_lines(v, indent + 1))
+        else:
+            s = "" if v is None else str(v)
+            s = s.replace("\r\n", "\n").replace("\r", "\n")
+            if "\n" in s:
+                out.append(f"{key}: |-")
+                block_lines = s.split("\n")
+                if block_lines and block_lines[-1] == "":
+                    block_lines = block_lines[:-1]
+                for line in block_lines:
+                    out.append(f"{child_prefix}{line}")
+            else:
+                out.append(f"{key}: {_yaml_scalar(s)}")
+    return out
 
 
 def _yaml_scalar(v: Any) -> str:
@@ -574,7 +730,41 @@ class Writer:
         if self.dry_run:
             self._log("WOULD-COPY", dest); self.copy_count += 1; return
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dest)
+
+        # 1) 内容一致直接跳过,避免无谓的覆盖触发 Windows 文件占用
+        try:
+            if dest.exists() and dest.stat().st_size == src.stat().st_size \
+                    and dest.read_bytes() == src.read_bytes():
+                self.copy_count += 1
+                self._log("SKIP-SAME", dest)
+                return
+        except OSError:
+            pass
+
+        # 2) 写到临时文件再原子替换 + 重试,绕开 IDE/编辑器的句柄占用
+        tmp = dest.with_suffix(dest.suffix + ".tmp")
+        last_err: Optional[BaseException] = None
+        for _ in range(3):
+            try:
+                shutil.copy2(src, tmp)
+                os.replace(tmp, dest)
+                last_err = None
+                break
+            except PermissionError as e:
+                last_err = e
+                # 清理可能残留的 tmp,避免下次循环被卡
+                try:
+                    if tmp.exists():
+                        tmp.unlink()
+                except OSError:
+                    pass
+                time.sleep(0.3)
+        if last_err is not None:
+            raise PermissionError(
+                f"目标文件被占用,无法写入: {dest}\n"
+                f"请关闭 IDE / 编辑器中该文件的窗口后重试。原始错误: {last_err}"
+            )
+
         self.created.append(dest)
         self.copy_count += 1
         self._log("COPY", dest)
@@ -707,10 +897,13 @@ def _update_or_append_block(
     if not existing:
         new_text = (fallback_header + ("\n\n" if fallback_header else "") + new_block + "\n")
     elif begin_marker in existing and end_marker in existing:
-        # 替换旧 block
+        # 替换旧 block。注意: re.sub 的 repl 参数会对 \1 \U \\ 等做反斜杠解析,
+        # 而 new_block 里可能有 Windows 路径(C:\Users\...)、JSON 字符串等,
+        # 一旦命中 \U/\u/\N 等就会抛 re.error: bad escape。
+        # 用 lambda 返回字符串可以绕开模板解析,保证内容原样写入。
         new_text = re.sub(
             re.escape(begin_marker) + r".*?" + re.escape(end_marker),
-            new_block,
+            lambda _m: new_block,
             existing,
             count=1,
             flags=re.DOTALL,
@@ -1019,8 +1212,7 @@ SYNC_CATEGORIES = ["skills", "context", "rules", "commands", "agents", "mcp", "s
 
 
 # ============================================================================
-# sync 模式 (`agent_convert.py all`): 扫描已有 agent + 冲突裁决 + 已有 agent 间同步
-
+# sync 模式 (`agent_convert.py all`): 全局自动扫描 + 冲突裁决 + 双向同步
 # ============================================================================
 @dataclass
 class Candidate:
@@ -1075,21 +1267,21 @@ def _prompt_conflict(category: str, name: str, cands: List[Candidate],
     if prefer:
         for c in cands:
             if c.agent == prefer:
-                print(f"  [auto-prefer={prefer}] {category}:{name} → {c.agent}")
+                print(f"  {_yellow('[auto-prefer=' + prefer + ']')} {_cyan(category)}:{name} → {_green(c.agent)}")
                 return c
     # 3) --auto
     if auto == "newest":
         c = max(cands, key=lambda x: x.src_path.stat().st_mtime if x.src_path.exists() else 0)
-        print(f"  [auto-newest] {category}:{name} → {c.agent} ({c.src_path})")
+        print(f"  {_yellow('[auto-newest]')} {_cyan(category)}:{name} → {_green(c.agent)} {_dim('(' + str(c.src_path) + ')')}")
         return c
     if auto == "skip":
-        print(f"  [auto-skip] 跳过 {category}:{name}")
+        print(f"  {_yellow('[auto-skip]')} 跳过 {_cyan(category)}:{name}")
         return None
     if auto == "first":
         return cands[0]
     # 4) 交互
     print()
-    print(f"!! 冲突: {category} \"{name}\" 在多个 agent 里内容不同:")
+    print(f"{_red(_bold('!! 冲突'))}: {_cyan(category)} \"{_bold(name)}\" 在多个 agent 里内容不同:")
     for i, c in enumerate(cands, 1):
         try:
             mtime_str = ""
@@ -1100,20 +1292,21 @@ def _prompt_conflict(category: str, name: str, cands: List[Candidate],
         except Exception:
             mtime_str = "?"
         preview = c.canonical.replace("\n", " | ")[:80]
-        print(f"  [{i}] {c.agent:14s} {mtime_str}  ({len(c.canonical)} 字)")
-        print(f"      {preview}")
-    print("  说明: 选择某个编号就以该 agent 的版本为准, 并同步覆盖到其它目标")
-    print(f"  [s] 跳过这一项, 不同步     [q] 退出整个同步")
+        idx_tag = _yellow(_bold(f"[{i}]"))
+        agent_tag = _green(f"{c.agent:14s}")
+        meta = _dim(f"{mtime_str}  ({len(c.canonical)} 字)")
+        print(f"  {idx_tag} {agent_tag} {meta}")
+        print(f"      {_dim(preview)}")
+    print(f"  {_yellow('[s]')} 跳过这一项     {_red('[q]')} 退出整个同步")
     while True:
         try:
-            choice = input(f"  请选择作为准版本的编号 [1-{len(cands)}/s/q]: ").strip().lower()
-
+            choice = input(f"  {_bold('请选择')} [{_yellow(f'1-{len(cands)}')}/{_yellow('s')}/{_red('q')}]: ").strip().lower()
         except (EOFError, KeyboardInterrupt):
-            print("\n[!] 已取消"); sys.exit(130)
+            print(f"\n{_red('[!] 已取消')}"); sys.exit(130)
         if choice == "s":
             return None
         if choice == "q":
-            print("[!] 用户主动退出"); sys.exit(0)
+            print(f"{_red('[!] 用户主动退出')}"); sys.exit(0)
         if choice.isdigit() and 1 <= int(choice) <= len(cands):
             return cands[int(choice) - 1]
 
@@ -1284,23 +1477,23 @@ def sync_all(root: Path, dry_run: bool = False, sync: Optional[List[str]] = None
         collected = collectors[cat](root, active)
         if not collected:
             continue
-        print(f"\n>>> 类目 [{cat}]  共 {len(collected)} 项")
+        print(f"\n{_blue(_bold('>>> 类目'))} [{_cyan(_bold(cat))}]  共 {_yellow(str(len(collected)))} 项")
         for name, cands in collected.items():
             chosen = _prompt_conflict(cat, name, cands, prefer, auto)
             if chosen is None:
                 continue
-            display = chosen.agent
+            display = _green(chosen.agent)
             if len(cands) > 1 and len({c.canonical for c in cands}) == 1:
-                display = "(全部一致)"
-            print(f"  · {name:30s} → 选用 {display}")
+                display = _dim("(全部一致)")
+            print(f"  {_green('·')} {name:30s} → 选用 {display}")
             _write_resolved(cat, chosen, all_targets, writer)
             total_resolved += 1
 
-    print("\n" + "=" * 60)
-    print(f"完成! 共 {total_resolved} 项已分发, "
-          f"{writer.write_count + writer.copy_count} 个文件 "
-          f"(写入 {writer.write_count}, 拷贝 {writer.copy_count})"
-          f"{'(dry-run 未实际写)' if dry_run else ''}")
+    print("\n" + _dim("=" * 60))
+    print(f"{_green(_bold('完成!'))} 共 {_yellow(str(total_resolved))} 项已分发, "
+          f"{_yellow(str(writer.write_count + writer.copy_count))} 个文件 "
+          f"(写入 {_cyan(str(writer.write_count))}, 拷贝 {_cyan(str(writer.copy_count))})"
+          f"{_dim('(dry-run 未实际写)') if dry_run else ''}")
 
 
 # ============================================================================
