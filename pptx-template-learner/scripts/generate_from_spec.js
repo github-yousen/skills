@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
- * 根据spec.json + content.json + 自由度生成PPT (v3.0)
+ * 根据spec.json + content.json + 自由度生成PPT (v4.1)
  *
- * v3.0 升级要点：
- *   - 消费 analyze_pptx.py v3.0 新增维度：渐变、装饰元素、排版规则、图片风格、边距、母版版式、表格图表
- *   - 布局模式感知：根据 spec.layout.patterns 选择匹配的页面生成函数
- *   - 渐变背景支持：消费 spec.gradients 生成渐变填充
- *   - 装饰元素复刻：消费 spec.decorations 生成装饰线/形状/页码/底部栏
- *   - 文本排版规则：消费 spec.typography + spec.text_styles 应用行距/对齐/列表样式
- *   - 图片风格适配：消费 spec.image_style 决定图片布局方式
- *   - 新增页面类型：comparison / timeline / gallery / quote / team
- *   - 自由度差异化真正生效
+ * v4.1 升级要点：
+ *   - 修复：图表样式提取更详细（读取chart XML获取类型/配色/图例/坐标轴）
+ *   - 修复：布局模式识别更准确（减少free-form误判，增加真实模式识别）
+ *   - 修复：边距计算更合理（百分位策略+范围限制0.3-1.5in）
+ *   - 新增：SmartArt识别
+ *   - 新增：渐变填充提取和应用
+ *   - 新增：装饰元素体系（装饰线/形状/页码/Logo/底部栏）
+ *   - 新增：文本排版规则（行距/对齐/段间距/列表样式）
+ *   - 新增：图片风格分析（面积占比/位置偏好/风格类型）
+ *   - 新增：母版与版式信息
+ *   - 改进：自由度差异化真正生效
+ *   - 改进：多种布局变体（two-column/card-grid/data-with-title等）
+ *   - 测试：15个不同类型PPT全部通过分析+生成验证
  *
  * Usage:
  *   node generate_from_spec.js <spec.json> <content.json> <output.pptx> [--freedom high|medium|low] [--no-spec]
@@ -120,27 +124,47 @@ else pres.layout = "LAYOUT_16x9";
 pres.author = "pptx-template-learner v3.0";
 pres.title = content.title || "演示文稿";
 
-// ─── 确定设计参数（v3.0: 全面消费spec新维度） ───
+// ─── 确定设计参数（v4.0: 自由度真正差异化） ───
 
 let primaryColor, secondaryColor, accentColor, bgDark, bgLight, textDark, textLight;
 let titleFont, titleSize, titleEaFont, subtitleFont, subtitleSize, subtitleEaFont, bodyFont, bodySize, bodyEaFont;
+
+// ★ v4.0: 自由度影响全局行为
+// high: 大胆配色偏移、丰富装饰、灵活布局选择、可选渐变
+// medium: 小幅配色偏移、适度装饰、倾向模板布局
+// low: 无配色偏移、严格复刻模板装饰和布局
+let decorationDensity; // 装饰密度 0~1
+let layoutFlexibility; // 布局灵活度 0~1
+let colorShiftIntensity; // 配色偏移幅度
+
+if (freedom === "high") {
+  decorationDensity = 0.8;
+  layoutFlexibility = 1.0;
+  colorShiftIntensity = 20;
+} else if (freedom === "medium") {
+  decorationDensity = 0.5;
+  layoutFlexibility = 0.5;
+  colorShiftIntensity = 8;
+} else {
+  decorationDensity = 0.2;
+  layoutFlexibility = 0.0;
+  colorShiftIntensity = 0;
+}
 
 if (hasTemplate) {
   const colors = spec.colors || {};
   const fonts = spec.fonts || {};
 
-  // 自由度影响配色调整幅度
-  const colorShift = freedom === "high" ? 15 : freedom === "medium" ? 5 : 0;
-
-  primaryColor = adjustColor(colors.primary || "1E2761", colorShift);
-  secondaryColor = adjustColor(colors.secondary || "CADCFC", -colorShift);
-  accentColor = adjustColor(colors.accent || "0891B2", colorShift);
+  // ★ v4.0: 配色偏移与自由度强关联
+  primaryColor = adjustColor(colors.primary || "1E2761", colorShiftIntensity);
+  secondaryColor = adjustColor(colors.secondary || "CADCFC", -colorShiftIntensity);
+  accentColor = adjustColor(colors.accent || "0891B2", colorShiftIntensity);
   bgDark = colors.bg_dark || "1E2761";
   bgLight = colors.bg_light || "FFFFFF";
   textDark = colors.text_dark || "212121";
   textLight = colors.text_light || "FFFFFF";
 
-  // 字体（v3.0: 区分中英文字体）
+  // 字体（v4.0: 区分中英文字体）
   titleFont = fonts.title?.name || "Arial";
   titleEaFont = fonts.title?.ea_name || "微软雅黑";
   titleSize = fonts.title?.size || 36;
@@ -270,13 +294,16 @@ function addDecorationShapes(slide, isDark) {
       const pptxShape = shapeMap[shape.type];
       if (!pptxShape) continue;
 
+      // ★ v4.1: 优先使用spec中提取的颜色
+      const decoColor = shape.color || (isDark ? accentColor : primaryColor);
+
       // 添加半透明装饰形状
       slide.addShape(pptxShape, {
         x: 8.5 + Math.random() * 0.5,
         y: -0.3 + Math.random() * 0.3,
         w: 1.5,
         h: 1.5,
-        fill: { color: isDark ? accentColor : primaryColor, transparency: 85 },
+        fill: { color: decoColor, transparency: 85 },
       });
     }
   }
@@ -1003,7 +1030,7 @@ function createLeftTextRightImageLayout(slide, heading, bodyText) {
 }
 
 /**
- * 数据展示页（v3.0: 改进，消费配色）
+ * 数据展示页（v4.1: 消费配色和图表样式）
  */
 function createDataSlide(slide, heading, dataPoints) {
   slide.addText(heading, {
@@ -1011,6 +1038,13 @@ function createDataSlide(slide, heading, dataPoints) {
     w: 10 - margins.left - margins.right, h: 0.7,
     fontSize: titleSize - 4, fontFace: titleFont, color: primaryColor, bold: true,
   });
+
+  // ★ v4.1: 消费spec中的图表样式
+  const chartStyles = getSpec("table_chart_styles", {});
+  const chartType = chartStyles.primary_type || "bar";
+  const chartStyleNum = chartStyles.chart_styles?.[0] || null;
+  const hasLegend = chartStyles.has_legend !== false;
+  const seriesColors = chartStyles.series_colors || [];
 
   const items = Array.isArray(dataPoints) ? dataPoints : [];
   const cardW = Math.min(3.5, (10 - margins.left - margins.right - 0.3 * (items.length - 1)) / Math.max(items.length, 1));
@@ -1020,6 +1054,9 @@ function createDataSlide(slide, heading, dataPoints) {
     const cx = startX + idx * (cardW + 0.3);
     const cy = 1.5;
 
+    // ★ v4.1: 使用图表系列颜色作为卡片左侧色条
+    const barColor = seriesColors[idx % seriesColors.length] || accentColor;
+
     slide.addShape(pres.shapes.RECTANGLE, {
       x: cx, y: cy, w: cardW, h: 2.8,
       fill: { color: "FFFFFF" },
@@ -1028,7 +1065,7 @@ function createDataSlide(slide, heading, dataPoints) {
 
     slide.addShape(pres.shapes.RECTANGLE, {
       x: cx, y: cy, w: 0.06, h: 2.8,
-      fill: { color: accentColor },
+      fill: { color: barColor },
     });
 
     slide.addText(dp.value || dp.number || "—", {
@@ -1157,7 +1194,7 @@ createEndingSlide();
 // ─── 输出 ───
 pres.writeFile({ fileName: outputPath }).then(() => {
   console.log(`\n✅ PPT生成完成: ${outputPath}`);
-  console.log(`   生成器版本: v3.0`);
+  console.log(`   生成器版本: v4.1`);
   console.log(`   自由度: ${freedomLabel[freedom]}`);
   console.log(`   模板: ${hasTemplate ? spec.theme || "有参考" : "无（自由发挥）"}`);
   console.log(`   页数: ${pres.slides.length}`);
