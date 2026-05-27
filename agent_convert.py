@@ -1019,7 +1019,8 @@ SYNC_CATEGORIES = ["skills", "context", "rules", "commands", "agents", "mcp", "s
 
 
 # ============================================================================
-# sync 模式 (`agent_convert.py all`): 全局自动扫描 + 冲突裁决 + 双向同步
+# sync 模式 (`agent_convert.py all`): 扫描已有 agent + 冲突裁决 + 已有 agent 间同步
+
 # ============================================================================
 @dataclass
 class Candidate:
@@ -1101,10 +1102,12 @@ def _prompt_conflict(category: str, name: str, cands: List[Candidate],
         preview = c.canonical.replace("\n", " | ")[:80]
         print(f"  [{i}] {c.agent:14s} {mtime_str}  ({len(c.canonical)} 字)")
         print(f"      {preview}")
-    print(f"  [s] 跳过这一项     [q] 退出整个同步")
+    print("  说明: 选择某个编号就以该 agent 的版本为准, 并同步覆盖到其它目标")
+    print(f"  [s] 跳过这一项, 不同步     [q] 退出整个同步")
     while True:
         try:
-            choice = input(f"  请选择 [1-{len(cands)}/s/q]: ").strip().lower()
+            choice = input(f"  请选择作为准版本的编号 [1-{len(cands)}/s/q]: ").strip().lower()
+
         except (EOFError, KeyboardInterrupt):
             print("\n[!] 已取消"); sys.exit(130)
         if choice == "s":
