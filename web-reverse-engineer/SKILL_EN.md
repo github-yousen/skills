@@ -52,11 +52,19 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 req = urllib.request.Request(url, headers={
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept-Encoding': 'identity',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',  # NOT identity: servers often ignore it and force gzip
 })
-with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
-    html = resp.read().decode('utf-8', errors='ignore')
+with urllib.request.urlopen(req, context=ctx, timeout=20) as resp:
+    raw = resp.read()
+    import gzip, zlib
+    ce = resp.headers.get('Content-Encoding')
+    if ce == 'gzip':
+        raw = gzip.decompress(raw)
+    elif ce == 'deflate':
+        raw = zlib.decompress(raw, -zlib.MAX_WBITS)
+    html = raw.decode('utf-8', errors='ignore')
 ```
 
 ### Pitfall 2: PowerShell Inline Code Quote Conflicts
