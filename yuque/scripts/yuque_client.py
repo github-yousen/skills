@@ -2,6 +2,7 @@
 # 用法: python yuque_client.py <command> [args...]
 # 命令:
 #   whoami                        - 获取当前用户信息
+#   resolve-url <url>             - 由语雀文档URL直接定位 book_id/doc_id/format
 #   list-books                    - 获取知识库列表
 #   list-docs <book_id> [offset] [limit]  - 获取知识库文档列表
 #   find-docs <keyword> [page_limit] [max_pages] - 在用户自己的所有知识库中查找文档
@@ -226,6 +227,94 @@ def cmd_find_docs(cookie, csrf_token, x_login, keyword, page_limit=100, max_page
 
 
 
+def parse_yuque_url(url):
+    """从语雀文档 URL 解析出 user_login / book_slug / doc_slug。
+
+    支持形式：
+      https://www.yuque.com/<user>/<book>/<doc>
+      https://www.yuque.com/<user>/<book>/<doc>?xxx
+      www.yuque.com/<user>/<book>/<doc>
+      /<user>/<book>/<doc>
+    """
+    if not url:
+        return {'_error': 'url is required'}
+    u = url.strip()
+    # 去掉协议
+    u = re.sub(r'^[a-zA-Z]+://', '', u)
+    # 去掉域名
+    u = re.sub(r'^[^/]*yuque\.com/', '', u)
+    u = u.lstrip('/')
+    # 去掉 query / fragment
+    u = u.split('?')[0].split('#')[0]
+    parts = [p for p in u.split('/') if p]
+    if len(parts) < 3:
+        return {'_error': f'无法解析的语雀文档 URL（需要 user/book/doc 三段）: {url}', 'parts': parts}
+    return {
+        'user_login': parts[0],
+        'book_slug': parts[1],
+        'doc_slug': parts[2],
+    }
+
+
+def cmd_resolve_url(cookie, csrf_token, x_login, url):
+    """根据语雀文档 URL 直接定位文档：返回 book_id / doc_id / format 等关键信息。
+
+    一步到位，避免反复 list-books / list-docs 验证。
+    """
+    parsed = parse_yuque_url(url)
+    if '_error' in parsed:
+        return parsed
+
+    book_slug = parsed['book_slug']
+    doc_slug = parsed['doc_slug']
+
+    # 1) 在用户自己的知识库里按 slug 匹配 book_id
+    books = cmd_list_books(cookie, csrf_token, x_login)
+    if isinstance(books, dict) and '_error' in books:
+        return books
+    book = next((b for b in books if b.get('slug') == book_slug), None)
+
+    # 2) 直接用 doc_slug 调 get-doc（语雀 /api/docs/:slug 接受 slug，需要 book_id）
+    if book:
+        book_id = book.get('id')
+        doc = cmd_get_doc(cookie, csrf_token, x_login, doc_slug, book_id, mode='edit')
+        if isinstance(doc, dict) and '_error' not in doc:
+            return {
+                **parsed,
+                'book_id': book_id,
+                'book_name': book.get('name'),
+                'doc_id': doc.get('id'),
+                'doc_title': doc.get('title'),
+                'format': doc.get('format'),
+                'word_count': doc.get('word_count'),
+                'is_sheet': doc.get('format') == 'lakesheet',
+                'is_board': doc.get('format') == 'lakeboard',
+                'has_body': bool(doc.get('body')),
+            }
+        # get-doc 失败则回退到 toc 查找
+        toc = cmd_get_toc(cookie, csrf_token, x_login, book_id)
+        if isinstance(toc, dict) and 'toc' in toc:
+            node = next((t for t in toc['toc'] if t.get('url') == doc_slug), None)
+            if node:
+                return {
+                    **parsed,
+                    'book_id': book_id,
+                    'book_name': book.get('name'),
+                    'doc_id': node.get('doc_id'),
+                    'doc_title': node.get('title'),
+                    'format': None,
+                    'note': 'doc located via toc; get-doc returned error',
+                    'get_doc_error': doc,
+                }
+        return {**parsed, 'book_id': book_id, 'book_name': book.get('name'),
+                '_error': 'book 已定位，但未找到该文档（可能不属于当前用户或 slug 有误）',
+                'get_doc_error': doc}
+
+    return {**parsed,
+            '_error': f'在当前用户知识库中未找到 slug 为 "{book_slug}" 的知识库；'
+                      f'该 URL 可能属于他人或组织空间。'}
+
+
 def cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit'):
     r = api_request('GET', f'/api/docs/{doc_id}', 
                     params={'book_id': book_id, 'mode': mode},
@@ -394,64 +483,88 @@ def cmd_get_doc_versions(cookie, csrf_token, x_login, doc_id):
     return result
 
 
+def _strip_tags(html):
+    """去掉 HTML 标签并解码常见实体，得到纯文本。"""
+    import html as _html
+    text = re.sub(r'<[^>]+>', '', html or '')
+    return _html.unescape(text).strip()
+
+
+def _iter_headings(body):
+    """逐个枚举文档中的真实标题元素，返回 [(level, start, end, inner_text), ...]。
+
+    使用非贪婪逐个匹配 <hN>...</hN>，避免跨越多个标题的错误匹配。
+    """
+    result = []
+    for m in re.finditer(r'<h([1-6])\b[^>]*>(.*?)</h\1>', body or '', re.DOTALL):
+        level = int(m.group(1))
+        inner = _strip_tags(m.group(2))
+        result.append((level, m.start(), m.end(), inner))
+    return result
+
+
 def cmd_get_doc_outline(cookie, csrf_token, x_login, doc_id, book_id):
     """获取文档标题层级结构（h1-h6 outline）"""
     doc = cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit')
     if '_error' in doc:
         return doc
     body = doc.get('body', '')
-    headings = re.findall(r'<h([1-6])[^>]*>.*?<span class="ne-text">(.*?)</span>.*?</h\1>', body)
     lines = []
-    for level, text in headings:
-        indent = '  ' * (int(level) - 1)
+    for level, _start, _end, text in _iter_headings(body):
+        indent = '  ' * (level - 1)
         lines.append(f'{indent}H{level}: {text}')
     return '\n'.join(lines)
 
 
 def cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_text, new_content):
-    """按 heading 文本定位 section，替换该 section 内容"""
+    """按 heading 文本定位 section，替换该 section 内容。
+
+    定位方式：逐个枚举真实标题元素，找到内部纯文本【精确等于】或【包含】
+    heading_text 的标题，作为 section 起点；section 终点为下一个同级或更高级标题。
+    精确匹配优先，避免跨标题误删。
+    """
     doc = cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit')
     if '_error' in doc:
         return doc
     body = doc.get('body', '')
 
-    # 找到匹配的 heading
-    pattern = re.compile(
-        r'<h([1-6])([^>]*)>.*?' + re.escape(heading_text) + r'.*?</h\1>',
-        re.DOTALL
-    )
-    match = pattern.search(body)
-    if not match:
-        return {'_error': f'Heading not found: "{heading_text}"'}
+    headings = _iter_headings(body)
+    if not headings:
+        return {'_error': '文档中未找到任何标题，无法使用 replace-section'}
 
-    heading_level = int(match.group(1))
-    section_start = match.start()
+    target_norm = heading_text.strip()
+    # 优先精确匹配，其次包含匹配
+    idx = next((k for k, h in enumerate(headings) if h[3] == target_norm), None)
+    if idx is None:
+        idx = next((k for k, h in enumerate(headings) if target_norm in h[3]), None)
+    if idx is None:
+        available = '; '.join(h[3] for h in headings)
+        return {'_error': f'未找到标题: "{heading_text}"', 'available_headings': available}
 
-    # 找到该 heading 之前最近的 <hr>（如果紧邻），也包含进替换范围
+    heading_level, section_start, heading_end, _txt = headings[idx]
+
+    # 如果紧邻标题前是 <hr>，连同 hr 一起替换
     before_segment = body[max(0, section_start - 200):section_start]
     hr_pos = before_segment.rfind('<hr')
     if hr_pos != -1:
-        # 检查 hr 和 heading 之间是否只有空白
         between = before_segment[hr_pos:]
         between_cleaned = re.sub(r'<hr[^>]*/?>[\s]*', '', between)
         if between_cleaned.strip() == '':
             section_start = max(0, section_start - 200) + hr_pos
 
-    # 找到下一个同级或更高级 heading 的位置作为 end
-    rest = body[match.end():]
-    end_pattern = re.compile(r'<h([1-' + str(heading_level) + r'])[^>]*>')
-    end_match = end_pattern.search(rest)
-    if end_match:
-        section_end = match.end() + end_match.start()
-    else:
-        # 没有后续同级 heading，取到文档结尾（但保留 </div> 闭合标签）
+    # 终点：下一个同级或更高级标题的起点
+    section_end = None
+    for k in range(idx + 1, len(headings)):
+        if headings[k][0] <= heading_level:
+            section_end = headings[k][1]
+            break
+    if section_end is None:
+        # 没有后续同级/更高级标题，取到文档结尾（保留末尾 </div> 闭合标签）
         last_div = body.rfind('</div>')
-        section_end = last_div if last_div > match.end() else len(body)
+        section_end = last_div if last_div > heading_end else len(body)
 
-    # 替换
     new_body = body[:section_start] + new_content + body[section_end:]
 
-    # 更新文档
     result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title=None, body=new_body)
     result['section_replaced'] = heading_text
     result['original_length'] = len(body)
@@ -462,25 +575,82 @@ def cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_te
 def md2lake(md_text):
     """将 Markdown 文本转换为语雀 lake HTML 格式。
 
-    支持：标题、段落、加粗、斜体、行内代码、引用块、有序/无序列表、代码块、分割线、换行。
+    支持：标题、段落、加粗、斜体、删除线、行内代码、链接、图片、
+    引用块、有序/无序列表、代码块、表格、分割线、换行。
+    所有纯文本均做 HTML 转义，避免 < > & 破坏结构。
     """
+    import html as _html
+
+    def esc(s):
+        return _html.escape(s, quote=True)
+
     lines = md_text.split('\n')
     html_parts = []
     i = 0
     in_list = None  # 'ul' or 'ol'
 
+    def wrap_bare(s):
+        """把标签之外的文本节点统一包进 <span class="ne-text">。"""
+        out = []
+        n = len(s)
+        k = 0
+        while k < n:
+            if s[k] == '<':
+                j = s.find('>', k)
+                if j == -1:
+                    out.append(s[k:])
+                    break
+                out.append(s[k:j + 1])
+                k = j + 1
+            else:
+                j = s.find('<', k)
+                if j == -1:
+                    j = n
+                seg = s[k:j]
+                if seg.strip():
+                    out.append(f'<span class="ne-text">{seg}</span>')
+                else:
+                    out.append(seg)
+                k = j
+        return ''.join(out)
+
     def inline_format(text):
-        """处理行内格式：加粗、斜体、行内代码"""
-        # 行内代码（先处理，避免内部被其他规则干扰）
-        text = re.sub(r'`([^`]+)`', r'<code class="ne-code"><span class="ne-text">\1</span></code>', text)
+        """处理行内格式：先转义，再套标签，最后包裹裸文本。"""
+        text = esc(text)
+        stash = []
+
+        def _stash(frag):
+            stash.append(frag)
+            return f'\x00{len(stash) - 1}\x00'
+
+        # 图片 ![alt](url)
+        text = re.sub(
+            r'!\[([^\]]*)\]\(([^)]+)\)',
+            lambda m: _stash(f'<img src="{m.group(2)}" alt="{m.group(1)}" />'),
+            text,
+        )
+        # 链接 [text](url)
+        text = re.sub(
+            r'\[([^\]]+)\]\(([^)]+)\)',
+            lambda m: _stash(f'<a href="{m.group(2)}">{m.group(1)}</a>'),
+            text,
+        )
+        # 行内代码（先 stash，避免内部被其他规则干扰）
+        text = re.sub(
+            r'`([^`]+)`',
+            lambda m: _stash(f'<code class="ne-code">{m.group(1)}</code>'),
+            text,
+        )
         # 加粗
-        text = re.sub(r'\*\*(.+?)\*\*', r'<strong><span class="ne-text">\1</span></strong>', text)
+        text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+        # 删除线
+        text = re.sub(r'~~(.+?)~~', r'<del>\1</del>', text)
         # 斜体
-        text = re.sub(r'\*(.+?)\*', r'<em><span class="ne-text">\1</span></em>', text)
-        # 普通文本片段包装（如果还没被包装）
-        if '<span' not in text and text.strip():
-            text = f'<span class="ne-text">{text}</span>'
-        return text
+        text = re.sub(r'(?<!\*)\*([^*]+)\*(?!\*)', r'<em>\1</em>', text)
+        # 还原 stash
+        for idx, frag in enumerate(stash):
+            text = text.replace(f'\x00{idx}\x00', frag)
+        return wrap_bare(text)
 
     def close_list():
         nonlocal in_list
@@ -489,6 +659,17 @@ def md2lake(md_text):
         elif in_list == 'ol':
             html_parts.append('</ol>')
         in_list = None
+
+    def is_table_sep(s):
+        return bool(re.match(r'^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$', s))
+
+    def split_row(s):
+        s = s.strip()
+        if s.startswith('|'):
+            s = s[1:]
+        if s.endswith('|'):
+            s = s[:-1]
+        return [c.strip() for c in s.split('|')]
 
     while i < len(lines):
         line = lines[i]
@@ -502,12 +683,35 @@ def md2lake(md_text):
             while i < len(lines) and not lines[i].startswith('```'):
                 code_lines.append(lines[i])
                 i += 1
-            code_content = '\n'.join(code_lines)
+            code_content = esc('\n'.join(code_lines))
             html_parts.append(
-                f'<pre class="ne-codeblock" data-language="{lang}">'
+                f'<pre class="ne-codeblock" data-language="{esc(lang)}">'
                 f'<code>{code_content}</code></pre>'
             )
             i += 1
+            continue
+
+        # 表格：当前行像表头且下一行是分隔行
+        if '|' in line and i + 1 < len(lines) and is_table_sep(lines[i + 1]):
+            close_list()
+            header = split_row(line)
+            i += 2  # 跳过表头和分隔行
+            rows = []
+            while i < len(lines) and '|' in lines[i] and lines[i].strip():
+                rows.append(split_row(lines[i]))
+                i += 1
+            ncol = len(header)
+            tbl = ['<table class="ne-table"><tbody>']
+            tbl.append('<tr>' + ''.join(
+                f'<td><p class="ne-p">{inline_format(c)}</p></td>' for c in header
+            ) + '</tr>')
+            for row in rows:
+                cells = (row + [''] * ncol)[:ncol]
+                tbl.append('<tr>' + ''.join(
+                    f'<td><p class="ne-p">{inline_format(c)}</p></td>' for c in cells
+                ) + '</tr>')
+            tbl.append('</tbody></table>')
+            html_parts.append(''.join(tbl))
             continue
 
         # 分割线
@@ -522,10 +726,8 @@ def md2lake(md_text):
         if heading_match:
             close_list()
             level = len(heading_match.group(1))
-            text = heading_match.group(2)
-            html_parts.append(
-                f'<h{level}><span class="ne-text">{text}</span></h{level}>'
-            )
+            text = inline_format(heading_match.group(2))
+            html_parts.append(f'<h{level}>{text}</h{level}>')
             i += 1
             continue
 
@@ -627,6 +829,9 @@ def main():
         result = cmd_whoami(cookie, csrf_token, x_login)
     elif command == 'list-books':
         result = cmd_list_books(cookie, csrf_token, x_login)
+    elif command == 'resolve-url':
+        url = cmd_args[0]
+        result = cmd_resolve_url(cookie, csrf_token, x_login, url)
     elif command == 'list-docs':
         book_id = int(cmd_args[0])
         offset = int(cmd_args[1]) if len(cmd_args) > 1 else 0
