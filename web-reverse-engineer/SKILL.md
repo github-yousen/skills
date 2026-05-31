@@ -42,22 +42,32 @@ description: |
 
 `web_fetch` 工具会对页面进行 AI 处理，返回可读摘要，`<script src>` 标签全部丢失。
 
-**正确做法**：始终用 Python 脚本抓取原始 HTML：
+**正确做法**：始终用 Python 脚本抓取原始 HTML（**优先直接用 `scripts/web_fetch_source.py`，已内置解压/重试/反爬检测**）。手动抓取时务必处理压缩：
 
 ```python
-import urllib.request, ssl
+import urllib.request, ssl, gzip, zlib
 
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
+# 注意：不要用 Accept-Encoding: identity！很多服务器会无视它强制返回 gzip，
+# 导致 read() 拿到二进制乱码、<script src> 提取全失败。
 req = urllib.request.Request(url, headers={
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-    'Accept-Encoding': 'identity',  # 避免 gzip 解码问题
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,*/*;q=0.8',
+    'Accept-Encoding': 'gzip, deflate',  # 不声明 br/zstd（标准库无法解压）
 })
-with urllib.request.urlopen(req, context=ctx, timeout=15) as resp:
-    html = resp.read().decode('utf-8', errors='ignore')
+with urllib.request.urlopen(req, context=ctx, timeout=20) as resp:
+    raw = resp.read()
+    if resp.headers.get('Content-Encoding') == 'gzip':
+        raw = gzip.decompress(raw)
+    elif resp.headers.get('Content-Encoding') == 'deflate':
+        raw = zlib.decompress(raw, -zlib.MAX_WBITS)
+    html = raw.decode('utf-8', errors='ignore')
 ```
+
+> 实测：python.org / 知乎 / 掘金 / MDN 即使请求 `identity` 仍返回 gzip。只请求 `gzip, deflate` 时服务器会回落到 gzip，标准库可解压。需要 br/zstd 时 `pip install brotli zstandard`，脚本会自动启用。
 
 ### 陷阱2：PowerShell 内联代码引号冲突
 
@@ -85,19 +95,53 @@ re.findall(r'method:\s*["\']( GET|POST|PUT|DELETE|PATCH)["\'].*?url:\s*["\']([^"
 现代前端（Vite/Webpack）做代码分割，业务逻辑在 chunk 文件。
 需要在主 JS 中搜索 chunk 引用，按需抓取。
 
+### 陷阱6：抓到的不一定是真实页面（反爬拦截）
+
+很多站点对脚本请求返回的是**拦截页 / 跳转页 / 验证页**，而非真实内容，但 HTTP 200 + 含 `<html>`，极易误判成功。已知模式：
+
+| 现象 | 含义 | 应对 |
+|------|------|------|
+| 标题 `Sina Visitor System`、响应仅几 KB | 微博访客系统跳转页 | 需登录态 Cookie |
+| `Just a moment` / `Checking your browser` | Cloudflare 5秒盾/JS挑战 | 需浏览器渲染或 cf clearance cookie |
+| `百度安全验证` / `请完成安全验证` | 风控验证页 | 换 IP / 提供 Cookie |
+| 裸 `Mozilla/5.0` 触发 403（如知乎） | UA 反爬 | 用完整真实 UA + Referer |
+
+`web_fetch_source.py` 已内置 `detect_block()` 自动识别并在抓取时打印 `[反爬提示]`，结果记录在 `html_info.json` 的 `antibot_blocks`。**看到提示要先解决拦截再分析，否则后续 JS/API 提取全是无效数据。**
+
+### 陷阱7：网络抖动需重试
+
+跨境资源（googleapis 等）、429/5xx、超时很常见。脚本已对这些情况做**指数退避重试**（最多 3 次）。手动写抓取时也应加重试，不要单次失败就放弃。
+
 ---
 
 ## 分析模式：源码获取与理解
 
 ### 步骤一：抓取原始 HTML
 
-**使用 `scripts/web_fetch_source.py`（一键完成）**，或手动：
+**使用 `scripts/web_fetch_source.py`（一键全自动）**，或手动：
 
 ```bash
 python temp-scripts/web_fetch_source.py https://目标网站.com/ output_dir
 ```
 
-脚本自动完成：抓 HTML → 提取 JS 列表 → 批量抓取 JS → 提取 API 端点 → 保存分析报告。
+脚本自动完成全流程：
+1. 抓 HTML（自动解压 / 重试 / 反爬检测）
+2. 提取并抓取所有外链 JS
+3. **自动发现并抓取 code-split chunk**（Vite 动态 import + Webpack5 chunk 映射重建）——业务接口大多在 chunk 里，这一步是关键
+4. **检测到 Source Map 自动下载并还原未混淆源码**到 `sourcemap_restored/`，还原的源码也参与接口分析
+5. 通用化提取 API（REST / GraphQL / axios·fetch 调用点 / method-url 对）
+6. 提取页面路由 + 汇总域名体系
+7. **自动生成 `{域名}_report.md` 操作手册**（核心交付，下次直接看它）
+
+产物清单：
+
+| 文件 | 内容 |
+|------|------|
+| `{域名}_report.md` | ★ 操作手册：基本信息/凭证/API清单/路由/域名/附录 |
+| `analysis_report.json` | 完整机器可读结果（apis/routes/domains/sourcemaps） |
+| `sourcemap_restored/` | 还原的未混淆源码（若有 Source Map） |
+| `js/` | 所有 JS + 自动抓取的 chunk |
+| `page_source.html` / `html_info.json` / `initial_state.json` | 原始素材 |
 
 ### 步骤二：识别技术栈
 
@@ -162,7 +206,9 @@ python temp-scripts/auth_analyzer.py output_dir/js/ auth_report.json
 
 ### 步骤五：产出文档
 
-**读取 `references/report_template.md`，按模板填写，保存为 `{网站名}_report.md`。**
+`web_fetch_source.py` 运行结束会**自动生成 `{域名}_report.md` 骨架**（基本信息、凭证关键词、分组 API 清单、路由地图、域名体系、JS/SourceMap 附录）。
+
+你需要做的是**在自动骨架基础上补全**：填写"可直接执行的操作"清单、签名算法代码、多步依赖链等需要人工理解的部分。完整模板见 `references/report_template.md`。
 
 文档的核心价值是**下次直接用**——不用重新分析，直接看"可操作清单"章节。
 
@@ -271,8 +317,10 @@ def wbi_sign(params: dict, img_key: str, sub_key: str) -> dict:
 
 | 脚本 | 用途 |
 |------|------|
-| `scripts/web_fetch_source.py` | 一键抓取：HTML → JS → API端点提取 |
+| `scripts/web_fetch_source.py` | 一键全自动：HTML→JS→**chunk自动抓取**→**SourceMap还原**→API/路由/域名提取→**生成Markdown操作手册**。内置自动解压/重试/反爬检测 |
 | `scripts/auth_analyzer.py` | 鉴权深度分析：Cookie/CSRF/Token/签名 |
+
+**可选依赖**：`pip install brotli zstandard` 后脚本自动支持 br/zstd 压缩（不装也能跑，仅 gzip/deflate）。
 
 **使用**：复制到项目 `temp-scripts/` 目录运行。
 
