@@ -57,18 +57,36 @@ description: |
 ## Agent 执行规范
 
 1. **先验证凭证**：首次操作或遇到异常时，先执行 `whoami`。
-2. **找用户自己的文档**：优先用 `find-docs <keyword>` 在用户自己的知识库中查找；不要用 `search`，它是全站公开搜索。
-3. **搜索公开内容**：只有用户明确要搜语雀公开资料时，才使用 `search`。
-4. **读取正文**：`get-doc` 必须使用 `mode=edit`，否则拿不到 `body`。
-5. **大文档读取**：优先使用 `--body-only --output-file`，避免 Windows 管道或 JSON 输出过大失败。
-6. **整篇更新**：长内容先写入 HTML 文件，再用 `update-doc --body-file`。
-7. **局部更新**：优先用 `get-doc-outline` 定位标题，再用 `replace-section` 只替换目标 section。
-8. **删除文档**：属于破坏性操作，必须先向用户确认目标文档标题、`doc_id` 和 `book_id`。
-9. **凭证失效**：返回 `401/403` 时，提示用户重新获取 Cookie 和 `yuque_ctoken`。
+2. **拿到文档 URL 先用 `resolve-url`**：当用户给出语雀文档链接（形如 `https://www.yuque.com/<user>/<book>/<doc>`）时，**第一步**就用 `resolve-url <url>` 一次性拿到 `book_id`、`doc_id`、`format`，不要再反复 `list-books` / `list-docs` 试探定位。
+3. **找用户自己的文档**：没有 URL 时，优先用 `find-docs <keyword>` 在用户自己的知识库中查找；不要用 `search`，它是全站公开搜索。
+4. **搜索公开内容**：只有用户明确要搜语雀公开资料时，才使用 `search`。
+5. **读取正文**：`get-doc` 必须使用 `mode=edit`，否则拿不到 `body`。
+6. **大文档读取**：优先使用 `--body-only --output-file`，避免 Windows 管道或 JSON 输出过大失败。
+7. **整篇更新**：长内容先写入 HTML 文件，再用 `update-doc --body-file`。
+8. **局部更新**：优先用 `get-doc-outline` 定位标题，再用 `replace-section` 只替换目标 section。
+9. **删除文档**：属于破坏性操作，必须先向用户确认目标文档标题、`doc_id` 和 `book_id`。
+10. **凭证失效**：返回 `401/403` 时，提示用户重新获取 Cookie 和 `yuque_ctoken`。
+11. **表格/画板文档限制**：`format` 为 `lakesheet`（表格）或 `lakeboard`（画板）的文档，`body` 通过本 API 返回为空，无法用 `get-doc` / `get-doc-outline` / `replace-section` 读写正文。遇到此类文档应直接告知用户该限制，`resolve-url` 会用 `is_sheet` / `is_board` 标记出来。
 
 ---
 
 ## 核心操作
+
+### 0. 由文档 URL 直接定位（强烈推荐的入口）
+
+```bash
+python {skill_dir}/scripts/yuque_client.py resolve-url <url>
+```
+
+输入语雀文档链接（`https://www.yuque.com/<user>/<book>/<doc>`），一步返回：
+
+- `book_id` / `book_name` — 所在知识库
+- `doc_id` / `doc_title` — 文档 ID 和标题
+- `format` — 文档格式（`lake` 普通文档 / `lakesheet` 表格 / `lakeboard` 画板）
+- `is_sheet` / `is_board` / `has_body` — 便于判断能否读写正文
+- `word_count` — 字数
+
+**当用户给出文档网址时，先调用它拿到 `doc_id` 和 `book_id`，再执行后续读写操作，避免反复 `list-books` / `list-docs` 试探。**
 
 ### 1. 获取用户信息
 
@@ -290,7 +308,7 @@ python {skill_dir}/scripts/yuque_client.py md2lake --input-file content.md
 python {skill_dir}/scripts/yuque_client.py md2lake "## 标题\n正文"
 ```
 
-将 Markdown 转为语雀 lake HTML 格式。支持：标题、加粗/斜体、行内代码、引用块、有序/无序列表、代码块、分割线。
+将 Markdown 转为语雀 lake HTML 格式。支持：标题、加粗/斜体/删除线、行内代码、链接、图片、引用块、有序/无序列表、代码块、表格、分割线。所有纯文本与代码均自动做 HTML 转义（`< > &`），不会破坏结构。
 
 **推荐搭配 update-doc 使用**：先 md2lake 转格式，再 update-doc --body-file 上传。
 
