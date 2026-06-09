@@ -12,7 +12,11 @@ param(
     [string]$Engines = "bing,google,duckduckgo,sogou",
     [int]$Limit = 10,
     [switch]$Json,
-    [string]$Lang = "en"
+    [string]$Lang = "en",
+    [string]$AllowedDomains = "",
+    [string]$BlockedDomains = "",
+    [int]$MaxRetries = 2,
+    [int]$TimeoutSeconds = 15
 )
 $ErrorActionPreference = "SilentlyContinue"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -25,6 +29,51 @@ function ConvertFrom-HtmlEntity([string]$T) {
     return $d.Trim()
 }
 
+function Invoke-WithRetry([scriptblock]$Action, [int]$MaxRetries = 2) {
+    for ($i = 0; $i -lt $MaxRetries; $i++) {
+        try {
+            return & $Action
+        } catch {
+            if ($i -eq $MaxRetries - 1) { throw }
+            Start-Sleep -Seconds (1 * ($i + 1))
+        }
+    }
+}
+
+function Test-DomainFilter([string]$Url, [string]$Allowed, [string]$Blocked) {
+    if ([string]::IsNullOrEmpty($Allowed) -and [string]::IsNullOrEmpty($Blocked)) {
+        return $true
+    }
+    
+    # Simple string matching for domain filtering
+    $urlLower = $Url.ToLower()
+    
+    # Check blocked domains first
+    if (-not [string]::IsNullOrEmpty($Blocked)) {
+        $blockedDomains = $Blocked -split '[,;]' | ForEach-Object { $_.Trim().ToLower() }
+        foreach ($domain in $blockedDomains) {
+            if ($urlLower -match "https?://([^/]*\.)?$([regex]::Escape($domain))") {
+                return $false
+            }
+        }
+    }
+    
+    # Check allowed domains
+    if (-not [string]::IsNullOrEmpty($Allowed)) {
+        $allowedDomains = $Allowed -split '[,;]' | ForEach-Object { $_.Trim().ToLower() }
+        $isAllowed = $false
+        foreach ($domain in $allowedDomains) {
+            if ($urlLower -match "https?://([^/]*\.)?$([regex]::Escape($domain))") {
+                $isAllowed = $true
+                break
+            }
+        }
+        return $isAllowed
+    }
+    
+    return $true
+}
+
 $Q = Invoke-UrlEncode $Query
 $SearchUrls = [ordered]@{
     bing="https://www.bing.com/search?q=$Q"; google="https://www.google.com/search?q=$Q"
@@ -33,23 +82,74 @@ $SearchUrls = [ordered]@{
 }
 
 function Fetch-Html([string]$Url) {
-    $wc = New-Object System.Net.WebClient
-    $wc.Encoding = [System.Text.Encoding]::UTF8
-    $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-    $wc.Headers.Add("Accept-Language", "en-US,en;q=0.9")
+    $retryAction = {
+        $request = [System.Net.HttpWebRequest]::Create($Url)
+        $request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        $request.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        $request.Headers.Add("Accept-Language", "en-US,en;q=0.9")
+        $request.Timeout = $TimeoutSeconds * 1000
+        $request.ReadWriteTimeout = $TimeoutSeconds * 1000
+        
+        try {
+            $response = $request.GetResponse()
+            $stream = $response.GetResponseStream()
+            
+            # Read all bytes into memory stream
+            $memoryStream = New-Object System.IO.MemoryStream
+            $buffer = New-Object byte[] 4096
+            $bytesRead = 0
+            do {
+                $bytesRead = $stream.Read($buffer, 0, $buffer.Length)
+                if ($bytesRead -gt 0) {
+                    $memoryStream.Write($buffer, 0, $bytesRead)
+                }
+            } while ($bytesRead -gt 0)
+            
+            $bytes = $memoryStream.ToArray()
+            $memoryStream.Close()
+            $stream.Close()
+            $response.Close()
+            
+            # Detect encoding
+            $encoding = [System.Text.Encoding]::UTF8 # default
+            
+            # Check BOM
+            if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+                $encoding = [System.Text.Encoding]::UTF8
+            } elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) {
+                $encoding = [System.Text.Encoding]::Unicode
+            } elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF) {
+                $encoding = [System.Text.Encoding]::BigEndianUnicode
+            } else {
+                # Check Content-Type header
+                $contentType = $response.ContentType
+                if ($contentType -match "charset=([^;]+)") {
+                    $charset = $matches[1].Trim().ToLower()
+                    try {
+                        $encoding = [System.Text.Encoding]::GetEncoding($charset)
+                    } catch {
+                        # Invalid charset, use default
+                    }
+                } else {
+                    # Guess encoding based on domain
+                    if ($Url -match "bing\.com|baidu\.com|sogou\.com") {
+                        # Chinese search engines often use GBK
+                        $encoding = [System.Text.Encoding]::GetEncoding("GBK")
+                    }
+                }
+            }
+            
+            # Decode bytes
+            return $encoding.GetString($bytes)
+        } catch {
+            throw $_
+        }
+    }
+    
     try {
-        $bytes = $wc.DownloadData($Url)
-        # Decode as GB2312 (Bing serves GB2312 despite declaring UTF-8)
-        # Then verify: if no CJK chars found, fall back to UTF-8
-        $gb = [System.Text.Encoding]::GetEncoding("GBK").GetString($bytes)
-        $utf8 = [System.Text.Encoding]::UTF8.GetString($bytes)
-        # Simple heuristic: if GB2312 produces fewer replacement-like chars, use it
-        $gbBad = ($gb.ToCharArray() | Where-Object { [int]$_ -eq 0xFFFD }).Count
-        $utf8Bad = ($utf8.ToCharArray() | Where-Object { [int]$_ -eq 0xFFFD }).Count
-        if ($gbBad -le $utf8Bad) { return $gb }
-        return $utf8
+        return Invoke-WithRetry -Action $retryAction -MaxRetries $MaxRetries
     } catch {
-        Write-Host "Warning: Failed to fetch $Url - $_" -ForegroundColor Yellow
+        Write-Host "Warning: Failed to fetch $Url after $MaxRetries retries - $_" -ForegroundColor Yellow
         return $null
     }
 }
@@ -180,7 +280,15 @@ if ($ve.Count -eq 0) { Write-Host "Error: No valid engines." -ForegroundColor Re
 $all = @(); $seen = @{}
 foreach ($eng in $ve) {
     foreach ($r in (Fetch-Engine $eng)) {
-        $url = $r.url; if ([string]::IsNullOrWhiteSpace($url)) { continue }
+        $url = $r.url
+        if ([string]::IsNullOrWhiteSpace($url)) { continue }
+        
+        # Validate URL format
+        if ($url -notmatch '^https?://') { continue }
+        
+        # Apply domain filtering
+        if (-not (Test-DomainFilter -Url $url -Allowed $AllowedDomains -Blocked $BlockedDomains)) { continue }
+        
         try { $uri = [System.Uri]$url; $dk = $uri.Host + $uri.AbsolutePath } catch { $dk = $url }
         if ($seen.ContainsKey($dk)) { continue }; $seen[$dk] = $true
         $all += [PSCustomObject]@{ Title=$r.title; Url=$r.url; Snippet=$r.snippet }
