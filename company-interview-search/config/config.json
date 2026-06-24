@@ -1,0 +1,31 @@
+{
+  "default_platforms": ["nowcoder", "maimai"],
+  "default_engines": ["sogou", "bing"],
+  "default_limit": 10,
+  "default_timeout": 15,
+  "default_max_retries": 2,
+  "default_max_body_chars": 5000,
+  "default_fetch_count": 0,
+  "default_format": "text",
+  "concurrency": {
+    "search_workers": 8,
+    "fetch_workers": 5
+  },
+  "user_agents": [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  ],
+  "position_keywords": {
+    "backend": ["后端", "后台", "Java", "Go", "Python", "服务端", "后端开发"],
+    "frontend": ["前端", "前端开发", "Web前端", "Vue", "React", "前端工程师"],
+    "algorithm": ["算法", "算法工程师", "机器学习", "深度学习", "AI", "NLP", "CV"],
+    "test": ["测试", "测试开发", "测开", "QA", "质量", "测试工程师"],
+    "product": ["产品", "产品经理", "PM", "产品运营"],
+    "operation": ["运营", "产品运营", "用户运营", "内容运营"],
+    "design": ["设计", "UI", "UX", "交互", "视觉设计"],
+    "data": ["数据", "数据分析", "数据挖掘", "大数据", "数仓"]
+  }
+}
