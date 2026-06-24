@@ -1,0 +1,47 @@
+{
+  "nowcoder": {
+    "name": "牛客网",
+    "domain": "nowcoder.com",
+    "keywords": ["面经", "面试经验", "笔经面经", "面试题"],
+    "description": "牛客网 - 国内最大的IT求职面试平台",
+    "priority": 1,
+    "url_patterns": [
+      "nowcoder.com/discuss",
+      "nowcoder.com/experience"
+    ]
+  },
+  "maimai": {
+    "name": "脉脉",
+    "domain": "maimai.cn",
+    "keywords": ["面经", "面试", "薪资", "offer", "求职"],
+    "description": "脉脉 - 职场社交平台，真实员工面经分享",
+    "priority": 2,
+    "url_patterns": [
+      "maimai.cn/article",
+      "maimai.cn/topic"
+    ]
+  },
+  "zhihu": {
+    "name": "知乎",
+    "domain": "zhihu.com",
+    "keywords": ["面经", "面试经验", "求职经验", "面试题"],
+    "description": "知乎 - 高质量面经分享社区",
+    "priority": 3,
+    "url_patterns": [
+      "zhihu.com/question",
+      "zhihu.com/answer",
+      "zhuanlan.zhihu.com"
+    ]
+  },
+  "csdn": {
+    "name": "CSDN",
+    "domain": "csdn.net",
+    "keywords": ["面经", "面试题", "面试经验", "笔试"],
+    "description": "CSDN - 技术博客平台，大量面试经验分享",
+    "priority": 4,
+    "url_patterns": [
+      "blog.csdn.net",
+      "csdn.net/article"
+    ]
+  }
+}
