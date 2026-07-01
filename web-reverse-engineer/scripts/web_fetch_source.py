@@ -1,7 +1,9 @@
-# 网站源码逆向分析 - 通用抓取脚本（鲁棒增强版）
+# 网站源码逆向分析 - 通用抓取脚本
 # 用法: python web_fetch_source.py <url> [output_dir]
 # 功能: 抓取目标URL的原始HTML + 所有关联JS文件 + 提取关键信息
-# 增强: 自动解压(gzip/deflate/br/zstd) + 重试退避 + 反爬页检测 + 多级编码识别
+# 特性: 自动解压(gzip/deflate/br/zstd) + 重试退避 + 反爬页检测 + 多级编码识别
+#       WebSocket检测 + async/await调用模式 + SourceMap第三方库过滤 + 内联脚本chunk发现 + 参数归一化
+#       genBaseURL调用 + AI业务前缀(alice/samantha/biz) + 路径数组提取 + 深层路径通配 + 架构识别
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -156,10 +158,10 @@ def detect_block(text, body_len):
     m = re.search(r'<title[^>]*>(.*?)</title>', text, re.S | re.I)
     title = (m.group(1).lower() if m else '')
     for marker, desc in ANTIBOT_WEAK:
-        if marker in title or (body_len < 4096 and marker in low):
+        if marker in title or (body_len < 8192 and marker in low):
             hits.append(desc)
-    if body_len < 2048 and ('<html' in low or '<!doctype' in low):
-        hits.append('响应过小(<2KB)，疑似占位/跳转页')
+    if body_len < 4096 and ('<html' in low or '<!doctype' in low):
+        hits.append('响应过小(<4KB)，疑似占位/跳转页')
     return list(dict.fromkeys(hits))  # 去重保序
 
 
@@ -376,6 +378,29 @@ class JSAnalyzer:
         # fetch("url")
         (r'fetch\s*\(\s*["\'`](https?://[^"\'`]+|/[a-zA-Z0-9_/.-]+)["\'`]', 'fetch', False),
         (r'["\'`](/(?:medialist|audio|live|member|msg|dynamic|feed|account)[a-zA-Z0-9_/.-]+)["\'`]', 'biz-path', False),
+        # ===== WebSocket 连接 =====
+        # new WebSocket("wss://..."), new WebSocket("/path")
+        (r'(?:new\s+WebSocket|io\s*\(\s*["\'`])(wss?://[^"\'`)]+|/[a-zA-Z0-9_/.-]+)(?:["\'`)]?)', 'websocket', False),
+        # ws:// / wss:// 字面量
+        (r'(wss?://[a-zA-Z0-9._-]+:\d+[a-zA-Z0-9_/.-]*)', 'websocket', False),
+        # socket.io 连接路径
+        (r'(?:socket\.io|io)\s*\(\s*["\'`]([^"\'`)]+)["\'`]', 'websocket', False),
+        # ===== async/await 模式的 API 调用 =====
+        # await fetch(...) / await axios.get(...) / await request.post(...)
+        (r'(?:await|yield)\s+(?:axios|request|http|\$http|service|api)\.(get|post|put|delete|patch)\s*\(\s*["\'`]([^"\'`]+)["\'`]', 'async-call', True),
+        # const {data} = await axios.xxx(...)  / const res = await fetch(...)
+        (r'(?:const|let|var)\s+\w+\s*=\s*await\s+(?:axios|request|http|\$http|service|api)\.(get|post|put|delete|patch)\s*\(\s*["\'`]([^"\'`]+)["\'`]', 'async-call-var', True),
+        # 现代前端常用 axios.get<Type>(url) TypeScript 泛型
+        (r'axios\.(get|post|put|delete|patch)\s*<[^>]+>\s*\(\s*["\'`]([^"\'`]+)["\'`]', 'ts-generic-call', True),
+        # ===== Webpack 打包后的动态 API 调用模式 =====
+        # genBaseURL("/biz/xxx") / getBaseURL("/chat/...") / baseURL("/api/...")
+        (r'(?:genBaseURL|getBaseURL|baseURL|getUrl|getAPI|apiUrl|buildUrl)\s*\(\s*["\'`](/[a-zA-Z0-9_/.-]+)["\'`]', 'baseurl-call', False),
+        # include:["/alice/xxx","/samantha/xxx"] 数组形式的路由配置
+        (r'["\'`](/[a-zA-Z][a-zA-Z0-9_/]{4,60})["\'`]\s*,?\s*(?=["\'`]/\|["\'`\]])', 'route-array', False),
+        # AI 应用常见业务前缀 /alice/ /samantha/ /biz/ /security/ /code/ /building/
+        (r'["\'`](/(?:alice|samantha|biz|security|code|building|passport|chat)/(?:[a-zA-Z][a-zA-Z0-9_/.-]{3,60}))["\'`]', 'ai-biz-path', False),
+        # 通用后备：不少于3层深度的路径（覆盖 webpack 压缩后各种非标前缀）
+        (r'["\'`](/[a-z]{2,20}/[a-z]{2,30}/[a-zA-Z0-9_]{2,30}(?:/[a-zA-Z0-9_]{2,40})*)["\'`]', 'deep-path', False),
     ]
 
     # 鉴权关键词
@@ -402,11 +427,15 @@ class JSAnalyzer:
         self.apis = []
         self.auth_info = []
         self.sign_info = []
+        self.websockets = []     # WebSocket 连接
+        self.architecture = []   # 前端架构类型
 
     def analyze(self):
         self._extract_apis()
         self._extract_auth()
         self._extract_signing()
+        self._extract_websockets()
+        self._extract_architecture()
         return self
 
     def _extract_apis(self):
@@ -427,6 +456,9 @@ class JSAnalyzer:
                     path = m
                     # 过滤静态资源
                     if any(path.endswith(ext) for ext in ['.js', '.css', '.png', '.jpg', '.gif', '.svg', '.woff', '.ico', '.map']):
+                        continue
+                    # 过滤明显非API的静态路径前缀
+                    if any(path.startswith(pfx) for pfx in ['/js/', '/css/', '/img/', '/font/', '/static/', '/assets/', '/dist/', '/favicon', '/robots', '/sitemap']):
                         continue
                     if len(path) < 5:
                         continue
@@ -456,6 +488,38 @@ class JSAnalyzer:
                 'context': f'[{mixin_match.group(1)}]',
                 'source': self.source
             })
+
+    def _extract_websockets(self):
+        """提取 WebSocket 连接信息"""
+        for m in re.finditer(r"""new\s+WebSocket\s*\(\s*["']([^"']+)["']""", self.content):
+            url = m.group(1)
+            ctx = self.content[max(0, m.start()-50):min(len(self.content), m.end()+80)].replace('\n', ' ')
+            self.websockets.append({'url': url, 'context': ctx, 'source': self.source})
+
+        for m in re.finditer(r'(wss?://[a-zA-Z0-9._-]+:\d+[a-zA-Z0-9_/.-]+)', self.content):
+            url = m.group(1)
+            ctx = self.content[max(0, m.start()-30):min(len(self.content), m.end()+30)].replace('\n', ' ')
+            self.websockets.append({'url': url, 'context': ctx, 'source': self.source})
+
+    def _extract_architecture(self):
+        """检测前端应用架构类型，帮助理解为什么找不到 API"""
+        c = self.content
+        hints = []
+        # Next.js App Router + RSC
+        if 'RSC_CONTENT_TYPE_HEADER' in c or 'NEXT_ROUTER_STATE_TREE_HEADER' in c:
+            hints.append('Next.js App Router (RSC)')
+        if '__NEXT_DATA__' in c or 'next-route-announcer' in c:
+            hints.append('Next.js')
+        if '__NUXT__' in c:
+            hints.append('Nuxt.js')
+        if '__INITIAL_STATE__' in c:
+            hints.append('Vue SSR')
+        if 'graphql' in c.lower() and '__typename' in c:
+            hints.append('GraphQL')
+        if 'trpc' in c.lower() and 'createTRPC' in c:
+            hints.append('tRPC')
+        if hints:
+            self.architecture.extend(hints)
 
 
 # ============ 功能增强：Chunk发现 / SourceMap还原 / 路由 / 域名 / 报告 ============
@@ -639,6 +703,10 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
     lines.append(f'| Source Map | {"有（已还原源码）" if has_sm else "无/未还原"} |')
     main_js = report['js_files_analyzed'][0]['filename'] if report.get('js_files_analyzed') else '-'
     lines.append(f'| 主 JS 文件 | `{main_js}` |')
+    架构信息显示
+    arch_list = report.get('architecture', [])
+    if arch_list:
+        lines.append(f'| 前端架构 | {", ".join(arch_list)} |')
     if report.get('antibot_blocks'):
         lines.append(f'| ⚠️ 反爬状态 | {", ".join(report["antibot_blocks"])} |')
     lines.append('')
@@ -701,6 +769,20 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
     lines.append('')
     lines.append('---\n')
 
+    5.5 WebSocket 连接（如有）
+    ws_list = report.get('websockets', [])
+    if ws_list:
+        lines.append('## 5.5 WebSocket 连接\n')
+        lines.append('| URL | 来源JS |')
+        lines.append('|-----|--------|')
+        seen_ws = set()
+        for ws in ws_list:
+            u = ws.get('url', '')
+            if u not in seen_ws:
+                seen_ws.add(u)
+                lines.append(f'| `{u}` | {ws.get("source", "")} |')
+        lines.append('')
+
     # 六、附录：JS 清单 + SourceMap
     lines.append('## 六、附录\n')
     lines.append('### 6.1 JS 文件清单\n')
@@ -718,6 +800,20 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
                 lines.append(f'- ❌ `{s["map_url"]}`：{s.get("reason", "失败")}')
         lines.append('')
     lines.append('---\n')
+
+    架构提醒: Next.js RSC 无 API 时提示
+    arch = report.get('architecture', [])
+    total_apis = report.get('total_apis', 0)
+    if total_apis == 0 and any('RSC' in a or 'Next.js' in a for a in arch):
+        lines.append('> ⚠️ **架构说明**: 检测到 Next.js App Router (RSC) 架构。\n')
+        lines.append('> 这种架构的 API 数据获取在服务端执行，客户端 JS 中不含 API 路径字面量。\n')
+        lines.append('> 如需提取 API，建议：\n')
+        lines.append('> 1. **浏览器 Network 面板**：F12 → Network → 操作页面后查看 XHR/Fetch 请求\n')
+        lines.append('> 2. **提供带鉴权的 curl**：从 Network 面板复制请求为 cURL 提供给 AI\n')
+        lines.append('> 3. **查看 Source Map**：如有 Source Map 可还原未混淆源码\n')
+    elif total_apis == 0:
+        lines.append('> ⚠️ **提示**: 未找到 API 端点。可能是 API 路径运行时动态构造，或需登录态 Cookie。\n')
+
     lines.append('*文档由 web-reverse-engineer 技能自动生成，接口有变化请重新分析更新。*')
 
     out_path = os.path.join(output_dir, f'{host}_report.md')
@@ -792,6 +888,7 @@ def analyze_website(url, output_dir='web_analysis'):
     all_apis = []
     all_auth = []
     all_sign = []
+    all_websockets = []  WebSocket 收集
     js_results = []
     js_texts = []          # 收集JS文本用于路由提取
     chunk_urls = set()     # 待抓取的 chunk
@@ -834,10 +931,13 @@ def analyze_website(url, output_dir='web_analysis'):
         all_apis.extend(analyzer.apis)
         all_auth.extend(analyzer.auth_info)
         all_sign.extend(analyzer.sign_info)
+        all_websockets.extend(analyzer.websockets)
         js_results.append({
             'filename': fname, 'url': js_url, 'size': len(content),
             'api_count': len(analyzer.apis), 'auth_count': len(analyzer.auth_info),
             'sign_count': len(analyzer.sign_info),
+            'ws_count': len(analyzer.websockets),
+            'arch': analyzer.architecture,
         })
 
         # 发现 chunk（自动加入待抓队列）
@@ -857,7 +957,11 @@ def analyze_website(url, output_dir='web_analysis'):
                     if sm.get('ok'):
                         print(f'       ✅ 还原 {sm["restored_count"]} 个源文件')
                         # 还原的未混淆源码也参与接口分析
+                        过滤 node_modules 第三方库噪声，避免伪接口污染
                         for srcf in sm.get('files', []):
+                            if any(k in srcf['path'].replace('\\', '/') for k in
+                                   ['node_modules/', 'vendor/', 'polyfill', '/dist/', '.test.', 'spec/']):
+                                continue
                             a = JSAnalyzer(srcf['code'], 'sm:' + srcf['path']).analyze()
                             all_apis.extend(a.apis)
                             all_auth.extend(a.auth_info)
@@ -878,7 +982,7 @@ def analyze_website(url, output_dir='web_analysis'):
             fetched_urls.add(cu)
             process_js(cu, i + 1, len(chunk_list), tag='[chunk]')
 
-    # ---- 步骤4: 分析内联脚本 ----
+    # ---- 步骤4: 分析内联脚本（含 chunk 发现） ----
     print(f'\n[4] 分析内联脚本...')
     for i, script in enumerate(extractor.inline_scripts):
         js_texts.append(script)
@@ -886,15 +990,25 @@ def analyze_website(url, output_dir='web_analysis'):
         all_apis.extend(analyzer.apis)
         all_auth.extend(analyzer.auth_info)
         all_sign.extend(analyzer.sign_info)
+        all_websockets.extend(analyzer.websockets)
+        内联脚本中也查找 chunk 引用，防止遗漏
+        for cu in discover_chunks(script, url, url):
+            if cu not in fetched_urls:
+                chunk_urls.add(cu)
 
     # ---- 步骤5: 去重并输出 ----
     print(f'\n[5] 汇总结果...')
 
-    # API去重
+    # API去重（含参数模板归一化）
     seen_apis = set()
     unique_apis = []
     for api in all_apis:
-        key = f"{api.get('method', '')}:{api['path']}"
+        path = api['path']
+        参数模板归一化：将 /api/item/123 和 /api/item/456 视为同一接口
+        normalized = re.sub(r'/\d{6,}', '/{id}', path)   # 6位+数字 → {id}
+        normalized = re.sub(r'/[a-f0-9]{24,}', '/{oid}', normalized)  # MongoDB ObjectId
+        normalized = re.sub(r'/[a-f0-9]{8}-[a-f0-9]{4}-', '/{uuid}-', normalized)  # UUID
+        key = f"{api.get('method', '')}:{normalized}"
         if key not in seen_apis:
             seen_apis.add(key)
             unique_apis.append(api)
@@ -928,11 +1042,18 @@ def analyze_website(url, output_dir='web_analysis'):
     domains = summarize_domains(unique_apis, list(fetched_urls), url)
     print(f'    路由: {len(routes)} 条, 域名: {sum(len(v) for v in domains.values())} 个')
 
+    # 汇总架构信息
+    all_architectures = set()
+    for jr in js_results:
+        for a in jr.get('arch', []):
+            all_architectures.add(a)
+
     # 保存完整结果
     report = {
         'url': url,
         'timestamp': datetime.now().isoformat(),
         'meta_info': extractor.meta_info,
+        'architecture': list(all_architectures),
         'antibot_blocks': meta.get('blocks', []),
         'js_files_analyzed': js_results,
         'chunk_fetched': len([u for u in fetched_urls if u not in extractor.js_files]),
@@ -945,6 +1066,8 @@ def analyze_website(url, output_dir='web_analysis'):
         'apis': unique_apis,
         'auth_info': unique_auth,
         'sign_info': unique_sign,
+        'websockets': all_websockets,  WebSocket
+        'total_ws': len(all_websockets),
     }
 
     report_path = os.path.join(output_dir, 'analysis_report.json')
@@ -973,6 +1096,7 @@ def analyze_website(url, output_dir='web_analysis'):
     for typ, items in sorted(grouped.items()):
         print(f'  {typ}: {len(items)} 个')
     print(f'路由: {len(routes)} 条 | 域名: {sum(len(v) for v in domains.values())} 个')
+    print(f'WebSocket: {len(all_websockets)} 个')
     print(f'鉴权引用: {len(unique_auth)} 个 | 签名引用: {len(unique_sign)} 个')
     print(f'\n结果保存到: {os.path.abspath(output_dir)}/')
     print(f'  - page_source.html (原始HTML)')

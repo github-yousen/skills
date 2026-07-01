@@ -146,6 +146,12 @@ Referer: {TARGET_URL}
 | `api.{domain}` | 主 API |
 | `passport.{domain}` | 鉴权/登录 |
 
+### 7.1b WebSocket 连接（如有）
+
+| URL | 用途说明 |
+|-----|---------|
+| `{ws_url}` | 实时推送/聊天/通知 |
+
 ### 7.2 JS 文件清单
 
 | 文件名 | 大小 | 用途 |

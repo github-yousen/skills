@@ -129,9 +129,11 @@ python temp-scripts/web_fetch_source.py https://目标网站.com/ output_dir
 2. 提取并抓取所有外链 JS
 3. **自动发现并抓取 code-split chunk**（Vite 动态 import + Webpack5 chunk 映射重建）——业务接口大多在 chunk 里，这一步是关键
 4. **检测到 Source Map 自动下载并还原未混淆源码**到 `sourcemap_restored/`，还原的源码也参与接口分析
-5. 通用化提取 API（REST / GraphQL / axios·fetch 调用点 / method-url 对）
-6. 提取页面路由 + 汇总域名体系
-7. **自动生成 `{域名}_report.md` 操作手册**（核心交付，下次直接看它）
+5. 通用化提取 API（REST / GraphQL / axios·fetch 调用点 / method-url 对 / **async/await 模式** / **TS 泛型调用**）
+6. 检测 **WebSocket 连接**（`new WebSocket(...)` / `wss://`）并单独成章
+7. 提取页面路由 + 汇总域名体系
+8. 识别前端架构（Next.js RSC / Nuxt / GraphQL 等），API 为 0 时自动给出架构说明和操作指引
+9. **自动生成 `{域名}_report.md` 操作手册**（核心交付，下次直接看它）
 
 产物清单：
 
