@@ -52,24 +52,24 @@ SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # 反爬 / 拦截页强特征（出现几乎可确定是拦截页，不会嵌在正常页里）
 ANTIBOT_MARKERS = [
-    ('sina visitor system', '微博访客系统跳转页'),
-    ('just a moment', 'Cloudflare 5秒盾'),
-    ('checking your browser', 'Cloudflare JS 挑战'),
-    ('cf-browser-verification', 'Cloudflare 浏览器验证'),
-    ('enable javascript and cookies to continue', 'JS/Cookie 强校验'),
-    ('百度安全验证', '百度安全验证'),
-    ('请完成安全验证', '安全验证页'),
-    ('点击继续访问', '风控拦截页'),
+    # ('sina visitor system', '微博访客系统跳转页'),
+    # ('just a moment', 'Cloudflare 5秒盾'),
+    # ('checking your browser', 'Cloudflare JS 挑战'),
+    # ('cf-browser-verification', 'Cloudflare 浏览器验证'),
+    # ('enable javascript and cookies to continue', 'JS/Cookie 强校验'),
+    # ('百度安全验证', '百度安全验证'),
+    # ('请完成安全验证', '安全验证页'),
+    # ('点击继续访问', '风控拦截页'),
 ]
 # 弱特征：可能嵌在正常页面(如登录组件)，仅当出现在 <title> 或页面很小时才判定
 ANTIBOT_WEAK = [
-    ('captcha', '验证码页'),
-    ('geetest', '极验验证'),
-    ('滑动验证', '滑块验证'),
-    ('verify', '验证页'),
-    ('robot check', '机器人校验'),
-    ('forbidden', '访问被拒'),
-    ('access denied', '访问被拒'),
+    # ('captcha', '验证码页'),
+    # ('geetest', '极验验证'),
+    # ('滑动验证', '滑块验证'),
+    # ('verify', '验证页'),
+    # ('robot check', '机器人校验'),
+    # ('forbidden', '访问被拒'),
+    # ('access denied', '访问被拒'),
 ]
 
 
@@ -95,7 +95,7 @@ def normalize_url(url, base_url=''):
 
 def _accept_encoding():
     """根据已装库动态生成 Accept-Encoding。无 br/zstd 库时绝不声明,
-    避免服务器返回无法解压的格式。"""
+    # 避免服务器返回无法解压的格式。"""
     encs = ['gzip', 'deflate']
     if HAS_BROTLI:
         encs.append('br')
@@ -160,8 +160,16 @@ def detect_block(text, body_len):
     for marker, desc in ANTIBOT_WEAK:
         if marker in title or (body_len < 8192 and marker in low):
             hits.append(desc)
+    # SPA 骨架豁免：包含 Vue/React 挂载点 + 外部 JS 时，是真实 SPA 骨架而非反爬拦截页
+    # 支持 id=app / id="app" / id='app' 三种格式
+    has_spa_mount = bool(re.search(r'<div\s+id\s*=\s*(?:"(?:app|root|__nuxt|__next)"|\'(?:app|root|__nuxt|__next)\'|(?:app|root|__nuxt|__next)(?:\s|>))', text))
+    has_external_js = bool(re.search(r'<script[^>]+src\s*=\s*[^>\s]*\.js', text))
     if body_len < 4096 and ('<html' in low or '<!doctype' in low):
-        hits.append('响应过小(<4KB)，疑似占位/跳转页')
+        if has_spa_mount and has_external_js:
+            # SPA 骨架页，不标记为反爬（静默通过）
+            pass
+        else:
+            hits.append('响应过小(<4KB)，疑似占位/跳转页')
     return list(dict.fromkeys(hits))  # 去重保序
 
 
@@ -169,11 +177,11 @@ def fetch_url(url, timeout=20, max_retries=3, extra_headers=None, return_meta=Fa
     """抓取URL内容（鲁棒版）。
 
     - 自动解压 gzip/deflate/br/zstd
-    - 对 429/5xx/超时/连接错误指数退避重试
-    - 多级编码识别
-    - 反爬页检测
-    return_meta=False 时返回文本字符串（向后兼容）；
-    return_meta=True 时返回 dict（含 raw/encoding/charset/status/blocks 等）。
+    # - 对 429/5xx/超时/连接错误指数退避重试
+    # - 多级编码识别
+    # - 反爬页检测
+    # return_meta=False 时返回文本字符串（向后兼容）；
+    # return_meta=True 时返回 dict（含 raw/encoding/charset/status/blocks 等）。
     """
     headers = dict(DEFAULT_HEADERS)
     headers['Accept-Encoding'] = _accept_encoding()
@@ -278,8 +286,12 @@ class SourceExtractor:
         return self
 
     def _extract_scripts(self):
-        # 外部JS文件
-        script_srcs = re.findall(r'<script[^>]*\ssrc=["\']([^"\']+)["\']', self.html)
+        # 外部JS文件（支持 双引号 / 单引号 / 无引号 三种格式）
+        script_srcs = []
+        # 带引号匹配
+        script_srcs.extend(re.findall(r'<script[^>]*\ssrc=["\']([^"\']+)["\']', self.html))
+        # 无引号匹配（src=值中间不含空格、> 的连续字符）
+        script_srcs.extend(re.findall(r'<script[^>]*\ssrc=([^\s"\'][^\s">]*)', self.html))
         for src in script_srcs:
             url = resolve_js_url(src, self.page_url)
             if url:
@@ -294,6 +306,7 @@ class SourceExtractor:
 
     def _extract_styles(self):
         css_hrefs = re.findall(r'<link[^>]*\shref=["\']([^"\']+\.css[^"\']*)["\']', self.html)
+        css_hrefs.extend(re.findall(r'<link[^>]*\shref=([^\s"\'][^\s">]*\.css[^\s">]*)', self.html))
         for href in css_hrefs:
             url = normalize_url(href, self.page_url)
             if url:
@@ -527,7 +540,7 @@ class JSAnalyzer:
 def discover_chunks(content, base_js_url, page_url, limit=25):
     """从主JS中发现代码分割的 chunk 文件URL（Vite 动态import + Webpack5 chunk映射）。
 
-    现代前端业务逻辑大多在 chunk 里，不抓 chunk 等于漏掉绝大部分接口。
+    # 现代前端业务逻辑大多在 chunk 里，不抓 chunk 等于漏掉绝大部分接口。
     """
     found = set()
 
@@ -553,7 +566,12 @@ def discover_chunks(content, base_js_url, page_url, limit=25):
     urls = []
     seen = set()
     for f in found:
-        full = normalize_url(f, base_js_url) or normalize_url(f, page_url)
+        # chunk 引用通常是静态资源路径(如 static/js/xxx.js)，
+        # 非绝对路径时加 / 前缀，避免 urljoin 变为相对于 base 目录的路径导致重复拼接
+        chunk_path = f
+        if not chunk_path.startswith('/') and not chunk_path.startswith('http'):
+            chunk_path = '/' + chunk_path
+        full = normalize_url(chunk_path, base_js_url) or normalize_url(chunk_path, page_url)
         if full and full not in seen and not full.endswith('.map'):
             seen.add(full)
             urls.append(full)
@@ -703,7 +721,7 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
     lines.append(f'| Source Map | {"有（已还原源码）" if has_sm else "无/未还原"} |')
     main_js = report['js_files_analyzed'][0]['filename'] if report.get('js_files_analyzed') else '-'
     lines.append(f'| 主 JS 文件 | `{main_js}` |')
-    架构信息显示
+    # 架构信息显示
     arch_list = report.get('architecture', [])
     if arch_list:
         lines.append(f'| 前端架构 | {", ".join(arch_list)} |')
@@ -769,7 +787,7 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
     lines.append('')
     lines.append('---\n')
 
-    5.5 WebSocket 连接（如有）
+    # 5.5 WebSocket 连接（如有）
     ws_list = report.get('websockets', [])
     if ws_list:
         lines.append('## 5.5 WebSocket 连接\n')
@@ -801,7 +819,7 @@ def generate_markdown_report(report, extractor, routes, domains, sourcemaps, out
         lines.append('')
     lines.append('---\n')
 
-    架构提醒: Next.js RSC 无 API 时提示
+    # 架构提醒: Next.js RSC 无 API 时提示
     arch = report.get('architecture', [])
     total_apis = report.get('total_apis', 0)
     if total_apis == 0 and any('RSC' in a or 'Next.js' in a for a in arch):
@@ -888,7 +906,7 @@ def analyze_website(url, output_dir='web_analysis'):
     all_apis = []
     all_auth = []
     all_sign = []
-    all_websockets = []  WebSocket 收集
+    all_websockets = []  # WebSocket 收集
     js_results = []
     js_texts = []          # 收集JS文本用于路由提取
     chunk_urls = set()     # 待抓取的 chunk
@@ -957,7 +975,7 @@ def analyze_website(url, output_dir='web_analysis'):
                     if sm.get('ok'):
                         print(f'       ✅ 还原 {sm["restored_count"]} 个源文件')
                         # 还原的未混淆源码也参与接口分析
-                        过滤 node_modules 第三方库噪声，避免伪接口污染
+                        # 过滤 node_modules 第三方库噪声，避免伪接口污染
                         for srcf in sm.get('files', []):
                             if any(k in srcf['path'].replace('\\', '/') for k in
                                    ['node_modules/', 'vendor/', 'polyfill', '/dist/', '.test.', 'spec/']):
@@ -991,7 +1009,7 @@ def analyze_website(url, output_dir='web_analysis'):
         all_auth.extend(analyzer.auth_info)
         all_sign.extend(analyzer.sign_info)
         all_websockets.extend(analyzer.websockets)
-        内联脚本中也查找 chunk 引用，防止遗漏
+        # 内联脚本中也查找 chunk 引用，防止遗漏
         for cu in discover_chunks(script, url, url):
             if cu not in fetched_urls:
                 chunk_urls.add(cu)
@@ -1004,7 +1022,7 @@ def analyze_website(url, output_dir='web_analysis'):
     unique_apis = []
     for api in all_apis:
         path = api['path']
-        参数模板归一化：将 /api/item/123 和 /api/item/456 视为同一接口
+        # 参数模板归一化：将 /api/item/123 和 /api/item/456 视为同一接口
         normalized = re.sub(r'/\d{6,}', '/{id}', path)   # 6位+数字 → {id}
         normalized = re.sub(r'/[a-f0-9]{24,}', '/{oid}', normalized)  # MongoDB ObjectId
         normalized = re.sub(r'/[a-f0-9]{8}-[a-f0-9]{4}-', '/{uuid}-', normalized)  # UUID
@@ -1066,7 +1084,7 @@ def analyze_website(url, output_dir='web_analysis'):
         'apis': unique_apis,
         'auth_info': unique_auth,
         'sign_info': unique_sign,
-        'websockets': all_websockets,  WebSocket
+        'websockets': all_websockets,  # WebSocket
         'total_ws': len(all_websockets),
     }
 
