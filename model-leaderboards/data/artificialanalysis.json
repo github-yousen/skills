@@ -1,0 +1,63 @@
+{
+  "source": "Artificial Analysis (HTML 内嵌 Intelligence Index)",
+  "url": "https://artificialanalysis.ai/",
+  "metric": "Intelligence Index (越高越好)",
+  "models_count": 11,
+  "models": [
+    {
+      "model": "Claude Opus 5 (max)",
+      "intelligence_index": 63.0532452071291,
+      "url": "/models/claude-opus-5"
+    },
+    {
+      "model": "Claude Fable 5 (with fallback)",
+      "intelligence_index": 62.0726622017462,
+      "url": "/models/claude-fable-5"
+    },
+    {
+      "model": "GPT-5.6 Sol (max)",
+      "intelligence_index": 60.9298701329203,
+      "url": "/models/gpt-5-6-sol"
+    },
+    {
+      "model": "Grok 4.6 (high)",
+      "intelligence_index": 60.92297113115,
+      "url": "/models/grok-4-6"
+    },
+    {
+      "model": "Kimi K3 (max)",
+      "intelligence_index": 59.6994671342592,
+      "url": "/models/kimi-k3"
+    },
+    {
+      "model": "GLM-5.3 (max)",
+      "intelligence_index": 59.5134408119521,
+      "url": "/models/glm-5-3"
+    },
+    {
+      "model": "Muse Spark 1.2 (xhigh)",
+      "intelligence_index": 56.7615911905642,
+      "url": "/models/muse-spark-1-2"
+    },
+    {
+      "model": "Gemini 3.7 Flash (high)",
+      "intelligence_index": 56.0301180773699,
+      "url": "/models/gemini-3-7-flash"
+    },
+    {
+      "model": "DeepSeek V4 Pro 0813 (max)",
+      "intelligence_index": 53.1976849297815,
+      "url": "/models/deepseek-v4-pro"
+    },
+    {
+      "model": "GPT-5.6 Luna (max)",
+      "intelligence_index": 52.3180827840984,
+      "url": "/models/gpt-5-6-luna"
+    },
+    {
+      "model": "Nemotron 3 Ultra",
+      "intelligence_index": 38.3185469149774,
+      "url": "/models/nvidia-nemotron-3-ultra-550b-a55b"
+    }
+  ]
+}
