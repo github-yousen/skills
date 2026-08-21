@@ -1,0 +1,4 @@
+{
+  "artificialanalysis_api_key": "",
+  "note": "可选凭证。Artificial Analysis 官方 Data API 免费 tier 每日 100 次请求。在 https://artificialanalysis.ai/api-key-management-redirect 注册并创建 API Key 后填入本字段。不填也能用（脚本自动降级为首页 HTML 内嵌 Intelligence Index 数据，但模型数较少）。其余榜单（LMArena/LiveBench/SWE-bench/EQ-Bench）均为公开数据，无需凭证。"
+}

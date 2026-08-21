@@ -1,0 +1,3720 @@
+{
+  "source": "SWE-bench",
+  "url": "https://swebench.com/",
+  "metric": "model + agent + cost (resolved 明细在 per_instance_details)",
+  "models_count": 370,
+  "boards": {
+    "bash-only": [
+      {
+        "model": "Claude 4.5 Opus (high)",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 376.9539985,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 3 Flash (high)",
+        "model_display": "Gemini 3 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 177.98206539999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "MiniMax M2.5 (high)",
+        "model_display": "MiniMax M2.5",
+        "org": "Minimax",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 36.644993922,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.6 Opus",
+        "model_display": "Claude 4.6 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 275.76132225,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Opus (20251101) (medium)",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 360.6224985,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 3 Pro Preview (2025-11-18)",
+        "model_display": "Gemini 3 Pro Preview",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-18",
+        "cost": 229.978759475,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 Codex",
+        "model_display": "GPT 5.2 Codex",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-19",
+        "cost": 224.71194935,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GLM 5 (high)",
+        "model_display": "GLM 5",
+        "org": "Z-AI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 267.19456811,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 (high)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 236.78350885,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 (2025-12-11) (high)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-11",
+        "cost": 260.1295018,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Sonnet (high)",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 328.9482492,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Kimi K2.5 (high)",
+        "model_display": "Kimi K2.5",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 73.276870372,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Sonnet (20250929)",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-09-29",
+        "cost": 279.16737045,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "DeepSeek V3.2 (high)",
+        "model_display": "DeepSeek V3.2",
+        "org": "DeepSeek",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 223.92324825,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 3 Pro",
+        "model_display": "Gemini 3 Pro",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-26",
+        "cost": 480.0099282,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 (2025-12-11)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-11",
+        "cost": 134.8337487,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4 Opus (20250514)",
+        "model_display": "Claude 4 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-02",
+        "cost": 565.6352234999999,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Haiku (high)",
+        "model_display": "Claude 4.5 Haiku",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 165.46221805000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.1 Codex (medium)",
+        "model_display": "GPT 5.1 Codex",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 294.44117500000004,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.1 (2025-11-13) (medium)",
+        "model_display": "GPT 5.1",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-20",
+        "cost": 153.07773625000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5 (2025-08-07) (medium)",
+        "model_display": "GPT 5",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 140.19150875,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4 Sonnet (20250514)",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 185.7265839,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Kimi K2 Thinking",
+        "model_display": "Kimi K2 Thinking",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-10",
+        "cost": 219.15361769999998,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "MiniMax M2",
+        "model_display": "MiniMax M2",
+        "org": "Minimax",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 214.128088645,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "DeepSeek V3.2 Reasoner",
+        "model_display": "DeepSeek V3.2 Reasoner",
+        "org": "deepseek",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-01",
+        "cost": 14.0381514,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5 mini (2025-08-07) (medium)",
+        "model_display": "GPT 5 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 17.73853365,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "o3 (2025-04-16)",
+        "model_display": "o3",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 166.826374,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Devstral Small (2512)",
+        "model_display": "Devstral Small (2512)",
+        "org": "mistral",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-09",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5 mini",
+        "model_display": "GPT 5 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 23.600609549999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Qwen3-Coder 480B/A35B Instruct",
+        "model_display": "Qwen3-Coder 480B/A35B Instruct",
+        "org": "Qwen",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-02",
+        "cost": 123.963554,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GLM 4.6 (T=1)",
+        "model_display": "GLM 4.6",
+        "org": "Z.ai",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-01",
+        "cost": 48.3050376,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GLM 4.5 (2025-08-22)",
+        "model_display": "GLM 4.5",
+        "org": "Z.ai",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-22",
+        "cost": 148.5951744,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Devstral (2512)",
+        "model_display": "Devstral (2512)",
+        "org": "mistral",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-09",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 2.5 Pro (2025-05-06)",
+        "model_display": "Gemini 2.5 Pro",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 144.18604781250002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 3.7 Sonnet (20250219)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 177.3077241,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "o4-mini (2025-04-16)",
+        "model_display": "o4-mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 104.9866664,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Kimi K2 Instruct",
+        "model_display": "Kimi K2 Instruct",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 265.796683,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 4.1 (2025-04-14)",
+        "model_display": "GPT 4.1",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 73.156562,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5 nano (2025-08-07) (medium)",
+        "model_display": "GPT 5 nano",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 19.037590390000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 2.5 Flash (2025-04-17)",
+        "model_display": "Gemini 2.5 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 66.942859175,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "gpt-oss-120b",
+        "model_display": "gpt-oss-120b",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 28.559527899999996,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 4.1 mini (2025-04-14)",
+        "model_display": "GPT 4.1 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 217.57707639999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 4o (2024-11-20)",
+        "model_display": "GPT 4o",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 765.5740625000001,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Llama 4 Maverick Instruct",
+        "model_display": "Llama 4 Maverick Instruct",
+        "org": "Meta",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 156.85304879999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 2.0 Flash",
+        "model_display": "Gemini 2.0 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 0,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Llama 4 Scout Instruct",
+        "model_display": "Llama 4 Scout Instruct",
+        "org": "Meta",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 57.8157615,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Qwen2.5-Coder 32B Instruct",
+        "model_display": "Qwen2.5-Coder 32B Instruct",
+        "org": "Qwen",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-03",
+        "cost": 34.05807032999999,
+        "os_model": true,
+        "os_system": true
+      }
+    ],
+    "Multilingual": [
+      {
+        "model": "Gemini 3 Flash",
+        "model_display": "Gemini 3 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 105.55067604999999,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.6 Opus",
+        "model_display": "Claude 4.6 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 198.892073,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Opus",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 250.06589275,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GLM 5",
+        "model_display": "GLM 5",
+        "org": "Z.ai",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 192.74231006,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Gemini 3 Pro",
+        "model_display": "Gemini 3 Pro",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 306.3256754,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "MiniMax M2.5",
+        "model_display": "MiniMax M2.5",
+        "org": "Minimax",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-16",
+        "cost": 30.05951837,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Kimi K2.5",
+        "model_display": "Kimi K2.5",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 207.85105504,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Sonnet",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 200.8596708,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 (high)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 160.92329715,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5.2 Codex",
+        "model_display": "GPT 5.2 Codex",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-20",
+        "cost": 198.65146735,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Claude 4.5 Haiku",
+        "model_display": "Claude 4.5 Haiku",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 113.8470847,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "DeepSeek V3.2",
+        "model_display": "DeepSeek V3.2",
+        "org": "DeepSeek",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 115.14765747,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "GPT 5 mini",
+        "model_display": "GPT 5 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-13",
+        "cost": 15.489864099999998,
+        "os_model": false,
+        "os_system": true
+      }
+    ],
+    "Test": [
+      {
+        "model": "Sonar Foundation Agent + Claude 4.5 Opus",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "Sonar Foundation Agent",
+        "date": "2025-12-19",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Salesforce AI Research SAGE (bash-only)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Salesforce AI Research SAGE",
+        "date": "2025-10-27",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Atlassian Rovo Dev (2025-06-05)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Atlassian Rovo Dev",
+        "date": "2025-06-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20250405-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2025-05-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-agent 1.0 (Claude 3.7 Sonnet)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent 1.0",
+        "date": "2025-02-27",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20241202-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2025-01-31",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenHands + CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "model_display": "CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "org": "Anthropic",
+        "agent": "OpenHands",
+        "date": "2024-11-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AutoCodeRover-v2.0 (Claude-3.5-Sonnet-20241022)",
+        "model_display": "Claude 3.5-Sonnet-20241022",
+        "org": "Anthropic",
+        "agent": "AutoCodeRover-v2.0",
+        "date": "2024-11-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Honeycomb",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Honeycomb",
+        "date": "2024-08-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240719-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-07-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Factory Code Droid",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Factory Code Droid",
+        "date": "2024-06-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AutoCodeRover (v20240620) + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AutoCodeRover",
+        "date": "2024-06-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-agent + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-06-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AppMap Navie + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AppMap Navie",
+        "date": "2024-06-15",
+        "cost": null,
+        "os_model": true,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240430-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-05-09",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-agent + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-07-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 2",
+        "model_display": "Claude 2",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 13B",
+        "model_display": "SWE-Llama 13B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 7B",
+        "model_display": "SWE-Llama 7B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + ChatGPT 3.5",
+        "model_display": "GPT-3.5",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      }
+    ],
+    "Verified": [
+      {
+        "model": "live-SWE-agent + Claude 4.5 Opus medium (20251101)",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "live-SWE-agent",
+        "date": "2025-12-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Sonar Foundation Agent + Claude 4.5 Opus",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "Sonar Foundation Agent",
+        "date": "2025-12-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "TRAE + Doubao-Seed-Code",
+        "model_display": "Doubao-Seed-Code",
+        "org": "ByteDance",
+        "agent": "TRAE",
+        "date": "2025-09-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "live-SWE-agent + Gemini 3 Pro Preview (2025-11-18)",
+        "model_display": "Gemini 3 Pro Preview",
+        "org": "Google DeepMind",
+        "agent": "live-SWE-agent",
+        "date": "2025-11-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Atlassian Rovo Dev (2025-09-02)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Atlassian Rovo Dev",
+        "date": "2025-09-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent v20250719 + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2025-08-04",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.5 Opus (high)",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 376.9539985,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "ACoder",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "ACoder",
+        "date": "2025-08-19",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 3 Flash (high)",
+        "model_display": "Gemini 3 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 177.98206539999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + MiniMax M2.5 (high)",
+        "model_display": "MiniMax M2.5",
+        "org": "Minimax",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 36.644993922,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Warp",
+        "model_display": "Multiple",
+        "org": "OpenAI",
+        "agent": "Warp",
+        "date": "2025-09-01",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.6 Opus",
+        "model_display": "Claude 4.6 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 275.76132225,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "TRAE + Claude Sonnet 4 + Opus 4 + Sonnet 3.7 + Gemini 2.5 Pro",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "TRAE",
+        "date": "2025-06-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Harness AI",
+        "model_display": "Claude Sonnet 4",
+        "org": "Anthropic",
+        "agent": "Harness AI",
+        "date": "2025-07-31",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Sonar Foundation Agent + Claude 4.5 Sonnet",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Sonar Foundation Agent",
+        "date": "2025-11-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Lingxi-v1.5_claude-4-sonnet-20250514",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "Lingxi-v1.5",
+        "date": "2025-07-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "JoyCode + Claude 4 Sonnet + GPT-4.1",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "JoyCode",
+        "date": "2025-09-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Refact.ai Agent + Claude 4 Sonnet + o4-mini",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Refact.ai Agent",
+        "date": "2025-06-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Prometheus-v1.2.1 + GPT-5",
+        "model_display": "GPT-5",
+        "org": "OpenAI",
+        "agent": "Prometheus-v1.2.1",
+        "date": "2025-10-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.5 Opus (20251101) (medium)",
+        "model_display": "Claude 4.5 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 360.6224985,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 3 Pro Preview (2025-11-18)",
+        "model_display": "Gemini 3 Pro Preview",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-18",
+        "cost": 229.978759475,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Salesforce AI Research SAGE (OpenHands)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Salesforce AI Research SAGE",
+        "date": "2025-11-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Tools + Claude 4 Opus (2025-05-22)",
+        "model_display": "Claude 4 Opus",
+        "org": "Anthropic",
+        "agent": "Tools",
+        "date": "2025-05-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Salesforce AI Research SAGE (bash-only)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Salesforce AI Research SAGE",
+        "date": "2025-10-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.2 Codex",
+        "model_display": "GPT 5.2 Codex",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-19",
+        "cost": 224.71194935,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GLM 5 (high)",
+        "model_display": "GLM 5",
+        "org": "Z-AI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 267.19456811,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.2 (high)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 236.78350885,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Tools + Claude 4 Sonnet (2025-05-22)",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "Tools",
+        "date": "2025-05-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenHands + GPT-5",
+        "model_display": "GPT-5",
+        "org": "OpenAI",
+        "agent": "OpenHands",
+        "date": "2025-08-07",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.2 (2025-12-11) (high)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-11",
+        "cost": 260.1295018,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.5 Sonnet (high)",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 328.9482492,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Prometheus-v1.2 + GPT-5",
+        "model_display": "GPT-5",
+        "org": "OpenAI",
+        "agent": "Prometheus-v1.2",
+        "date": "2025-09-29",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Qodo Command",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Qodo Command",
+        "date": "2025-07-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Bloop",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "Bloop",
+        "date": "2025-07-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Lingxi v1.5 x Kimi K2",
+        "model_display": "Kimi K2",
+        "org": "Moonshot AI",
+        "agent": "Lingxi v1.5",
+        "date": "2025-10-14",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Warp",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Warp",
+        "date": "2025-06-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Moatless Tools + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "Moatless Tools",
+        "date": "2025-06-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Kimi K2.5 (high)",
+        "model_display": "Kimi K2.5",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 73.276870372,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "TRAE",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "TRAE",
+        "date": "2025-05-19",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.5 Sonnet (20250929)",
+        "model_display": "Claude 4.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-09-29",
+        "cost": 279.16737045,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Refact.ai Agent",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Refact.ai Agent",
+        "date": "2025-05-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "OpenHands",
+        "date": "2025-05-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Augment Agent v1",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Augment Agent v1",
+        "date": "2025-06-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "devlo",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "devlo",
+        "date": "2025-05-19",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Zencoder (2025-04-30)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Zencoder",
+        "date": "2025-04-30",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + DeepSeek V3.2 (high)",
+        "model_display": "DeepSeek V3.2",
+        "org": "DeepSeek",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 223.92324825,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + Qwen3-Coder-480B-A35B-Instruct",
+        "model_display": "Qwen3-Coder-480B-A35B-Instruct",
+        "org": "Qwen",
+        "agent": "OpenHands",
+        "date": "2025-08-05",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 3 Pro",
+        "model_display": "Gemini 3 Pro",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-26",
+        "cost": 480.0099282,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.2 (2025-12-11)",
+        "model_display": "GPT 5.2",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-11",
+        "cost": 134.8337487,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Nemotron-CORTEXA",
+        "model_display": "Multiple",
+        "org": "OpenAI",
+        "agent": "Nemotron-CORTEXA",
+        "date": "2025-05-16",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GLM-4.6",
+        "model_display": "GLM-4.6",
+        "org": "Z.ai",
+        "agent": "Undisclosed",
+        "date": "2025-09-30",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4 Opus (20250514)",
+        "model_display": "Claude 4 Opus",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-02",
+        "cost": 565.6352234999999,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2025-05-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4.5 Haiku (high)",
+        "model_display": "Claude 4.5 Haiku",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 165.46221805000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Aime-coder v1 + Anthopic Claude 3.7 Sonnet",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "Aime-coder v1",
+        "date": "2025-05-14",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.1 Codex (medium)",
+        "model_display": "GPT 5.1 Codex",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 294.44117500000004,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5.1 (2025-11-13) (medium)",
+        "model_display": "GPT 5.1",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-20",
+        "cost": 153.07773625000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "OpenHands",
+        "date": "2025-04-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Augment Agent v0",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Augment Agent v0",
+        "date": "2025-03-16",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20250405-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2025-04-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenHands + Kimi K2",
+        "model_display": "Kimi K2",
+        "org": "Moonshot AI",
+        "agent": "OpenHands",
+        "date": "2025-07-16",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5 (2025-08-07) (medium)",
+        "model_display": "GPT 5",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 140.19150875,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 4 Sonnet (20250514)",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 185.7265839,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "W&B Programmer O1 crosscheck5",
+        "model_display": "o1-preview",
+        "org": "OpenAI",
+        "agent": "W&B Programmer O1 crosscheck5",
+        "date": "2025-01-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "PatchPilot-v1.1",
+        "model_display": "o4-mini",
+        "org": "OpenAI",
+        "agent": "PatchPilot-v1.1",
+        "date": "2025-05-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GLM-4.5",
+        "model_display": "GLM-4.5",
+        "org": "Z.ai",
+        "agent": "Undisclosed",
+        "date": "2025-07-28",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "AgentScope",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "AgentScope",
+        "date": "2025-02-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Kimi K2 Thinking",
+        "model_display": "Kimi K2 Thinking",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-10",
+        "cost": 219.15361769999998,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Tools + Claude 3.7 Sonnet (2025-02-24)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "Tools",
+        "date": "2025-02-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Blackbox AI Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Blackbox AI Agent",
+        "date": "2025-01-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent v20250219 + Anthopic Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2025-02-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-agent + Claude 3.7 Sonnet w/ Review Heavy",
+        "model_display": "Claude 3.7 Sonnet w/ Review Heavy",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2025-02-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "CodeStory Midwit Agent + swe-search",
+        "model_display": "swe-search",
+        "org": "Anthropic",
+        "agent": "CodeStory Midwit Agent",
+        "date": "2024-12-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + MiniMax M2",
+        "model_display": "MiniMax M2",
+        "org": "Minimax",
+        "agent": "mini-SWE-agent",
+        "date": "2025-11-24",
+        "cost": 214.128088645,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + 4x Scaled (2024-02-03)",
+        "model_display": "4x Scaled",
+        "org": null,
+        "agent": "OpenHands",
+        "date": "2025-02-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EntroPO + R2E + Qwen3-Coder-30B-A3B-Instruct",
+        "model_display": "Qwen3-Coder-30B-A3B-Instruct",
+        "org": "Qwen",
+        "agent": "EntroPO + R2E",
+        "date": "2025-09-01",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Learn-by-interact",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Learn-by-interact",
+        "date": "2025-01-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + DeepSeek V3.2 Reasoner",
+        "model_display": "DeepSeek V3.2 Reasoner",
+        "org": "deepseek",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-01",
+        "cost": 14.0381514,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5 mini (2025-08-07) (medium)",
+        "model_display": "GPT 5 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 17.73853365,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "DeepSWE-Preview + TTS(Bo16)",
+        "model_display": "TTS(Bo16)",
+        "org": "OpenAI",
+        "agent": "DeepSWE-Preview",
+        "date": "2025-06-29",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + o3 (2025-04-16)",
+        "model_display": "o3",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 166.826374,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Nemotron-CORTEXA",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Nemotron-CORTEXA",
+        "date": "2025-04-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "devlo",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "devlo",
+        "date": "2024-12-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Emergent E1 (v2024-12-23)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Emergent E1",
+        "date": "2024-12-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Gru(2024-12-08)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Gru",
+        "date": "2024-12-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Artemis Agent v2 (2025-09-24)",
+        "model_display": "Claude Sonnet 4",
+        "org": "Anthropic",
+        "agent": "Artemis Agent v2",
+        "date": "2025-09-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-Rizzo",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "SWE-Rizzo",
+        "date": "2025-04-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Devstral Small (2512)",
+        "model_display": "Devstral Small (2512)",
+        "org": "mistral",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-09",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5 mini",
+        "model_display": "GPT 5 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2026-02-17",
+        "cost": 23.600609549999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent v20241212 + Anthopic Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2024-12-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Qwen3-Coder 480B/A35B Instruct",
+        "model_display": "Qwen3-Coder 480B/A35B Instruct",
+        "org": "Qwen",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-02",
+        "cost": 123.963554,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GLM 4.6 (T=1)",
+        "model_display": "GLM 4.6",
+        "org": "Z.ai",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-01",
+        "cost": 48.3050376,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20241202-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-12-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "devlo",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "devlo",
+        "date": "2024-11-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GLM 4.5 (2025-08-22)",
+        "model_display": "GLM 4.5",
+        "org": "Z.ai",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-22",
+        "cost": 148.5951744,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Devstral (2512)",
+        "model_display": "Devstral (2512)",
+        "org": "mistral",
+        "agent": "mini-SWE-agent",
+        "date": "2025-12-09",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "FrogBoss-32B-2510",
+        "model_display": "Frogboss 32B 2510",
+        "org": null,
+        "agent": "FrogBoss-32B-2510",
+        "date": "2025-11-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 2.5 Pro (2025-05-06)",
+        "model_display": "Gemini 2.5 Pro",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 144.18604781250002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "CodeSweep - SWE-agent - Kimi K2 Instruct",
+        "model_display": "Kimi K2 Instruct",
+        "org": "Moonshot AI",
+        "agent": "CodeSweep - SWE-agent",
+        "date": "2025-08-04",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Bracket.sh",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Bracket.sh",
+        "date": "2025-01-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenHands + CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "model_display": "CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "org": "Anthropic",
+        "agent": "OpenHands",
+        "date": "2024-10-29",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Claude 3.7 Sonnet (20250219)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 177.3077241,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EntroPO + R2E + Qwen3-Coder-30B-A3B-Instruct",
+        "model_display": "Qwen3-Coder-30B-A3B-Instruct",
+        "org": "Qwen",
+        "agent": "EntroPO + R2E",
+        "date": "2025-09-01",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Google Jules + Gemini 2.0 Flash (v20241212-experimental)",
+        "model_display": "Gemini 2.0 Flash (v20241212-experimental)",
+        "org": "Google DeepMind",
+        "agent": "Google Jules",
+        "date": "2024-12-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Engine Labs (2024-11-25)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Engine Labs",
+        "date": "2024-11-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AutoCodeRover-v2.1 (Claude-3.5-Sonnet-20241022)",
+        "model_display": "Claude 3.5-Sonnet-20241022",
+        "org": "Anthropic",
+        "agent": "AutoCodeRover-v2.1",
+        "date": "2025-01-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenHands + Qwen3-Coder-30B-A3B-Instruct",
+        "model_display": "Qwen3-Coder-30B-A3B-Instruct",
+        "org": "Qwen",
+        "agent": "OpenHands",
+        "date": "2025-08-05",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Agentless-1.5 + Claude-3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Agentless-1.5",
+        "date": "2024-12-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Solver (2024-10-28)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Solver",
+        "date": "2024-10-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Bytedance MarsCode Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Bytedance MarsCode Agent",
+        "date": "2024-11-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "nFactorial (2024-11-05)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "nFactorial",
+        "date": "2024-11-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Tools + Claude 3.5 Sonnet (2024-10-22)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Tools",
+        "date": "2024-10-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Composio SWE-Kit (2024-10-25)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Composio SWE-Kit",
+        "date": "2024-10-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AppMap Navie v2",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "AppMap Navie v2",
+        "date": "2024-11-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Skywork-SWE-32B + TTS(Bo8)",
+        "model_display": "TTS(Bo8)",
+        "org": "Qwen",
+        "agent": "Skywork-SWE-32B",
+        "date": "2025-06-16",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + DevStral Small 2505",
+        "model_display": "DevStral Small 2505",
+        "org": "Mistral",
+        "agent": "OpenHands",
+        "date": "2025-05-20",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Emergent E1 (v2024-10-12)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Emergent E1",
+        "date": "2024-10-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AutoCodeRover-v2.0 (Claude-3.5-Sonnet-20241022)",
+        "model_display": "Claude 3.5-Sonnet-20241022",
+        "org": "Anthropic",
+        "agent": "AutoCodeRover-v2.0",
+        "date": "2024-11-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "PatchPilot + Co-PatcheR",
+        "model_display": "Co-PatcheR",
+        "org": null,
+        "agent": "PatchPilot",
+        "date": "2025-05-28",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Solver (2024-09-12)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Solver",
+        "date": "2024-09-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Gru(2024-08-24)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Gru",
+        "date": "2024-08-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "FrogMini-14B-2510",
+        "model_display": "Frogmini 14B 2510",
+        "org": null,
+        "agent": "FrogMini-14B-2510",
+        "date": "2025-11-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + o4-mini (2025-04-16)",
+        "model_display": "o4-mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 104.9866664,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "CodeShellAgent + Gemini 2.0 Flash (Experimental)",
+        "model_display": "Gemini 2.0 Flash (Experimental)",
+        "org": "Google DeepMind",
+        "agent": "CodeShellAgent",
+        "date": "2025-01-18",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + Kimi K2 Instruct",
+        "model_display": "Kimi K2 Instruct",
+        "org": "Moonshot AI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 265.796683,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Solver (2024-09-12)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Solver",
+        "date": "2024-09-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Nova Premier 1.0 (2025-04-30)",
+        "model_display": "Amazon.nova Premier v1:0",
+        "org": null,
+        "agent": "Amazon Nova Premier 1.0",
+        "date": "2025-05-27",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Agentless Lite + O3 Mini (20250214)",
+        "model_display": "O3 Mini",
+        "org": "OpenAI",
+        "agent": "Agentless Lite",
+        "date": "2025-02-14",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "DeepSWE-Preview",
+        "model_display": "DeepSWE-Preview",
+        "org": null,
+        "agent": "R2E-Gym",
+        "date": "2025-06-29",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "SWE-Exp",
+        "model_display": "DeepSeek V3 0324",
+        "org": "DeepSeek",
+        "agent": "SWE-Exp",
+        "date": "2025-08-06",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "ugaiforge",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "ugaiforge",
+        "date": "2025-01-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "nFactorial (2024-10-30)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "nFactorial",
+        "date": "2024-10-30",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-RL (Llama3-SWE-RL-70B + Agentless Mini) (20250226)",
+        "model_display": "Llama3-SWE-RL-70B",
+        "org": "Meta",
+        "agent": "Agentless Mini",
+        "date": "2025-02-26",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Nebius AI Qwen 2.5 72B Generator + LLama 3.1 70B Critic",
+        "model_display": "Multiple",
+        "org": "Meta",
+        "agent": "Nebius AI",
+        "date": "2024-11-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Tools + Claude 3.5 Haiku",
+        "model_display": "Claude 3.5 Haiku",
+        "org": "Anthropic",
+        "agent": "Tools",
+        "date": "2024-10-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Honeycomb",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Honeycomb",
+        "date": "2024-08-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Composio SWEkit + Claude 3.5 Sonnet (2024-10-16)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Composio SWEkit",
+        "date": "2024-10-16",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + SWE-agent-LM-32B",
+        "model_display": "SWE-agent-LM-32B",
+        "org": "Qwen",
+        "agent": "SWE-agent",
+        "date": "2025-05-11",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent v20241029 + Anthopic Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2024-10-29",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GPT 4.1 (2025-04-14)",
+        "model_display": "GPT 4.1",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 73.156562,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240719-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-07-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Agentless-1.5 + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Agentless-1.5",
+        "date": "2024-10-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AutoCodeRover (v20240620) + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AutoCodeRover",
+        "date": "2024-06-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Skywork-SWE-32B",
+        "model_display": "Qwen2.5 Coder 32B Instruct",
+        "org": "Qwen",
+        "agent": "Skywork-SWE-32B",
+        "date": "2025-06-16",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + DevStral Small 2507",
+        "model_display": "DevStral Small 2507",
+        "org": "Mistral",
+        "agent": "SWE-agent",
+        "date": "2025-07-25",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Factory Code Droid",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Factory Code Droid",
+        "date": "2024-06-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GPT 5 nano (2025-08-07) (medium)",
+        "model_display": "GPT 5 nano",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 19.037590390000002,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-06-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-Fixer (Qwen2.5-7b retriever + Qwen2.5-72b editor)",
+        "model_display": "Qwen2.5 (7B + 72B)",
+        "org": "Qwen",
+        "agent": "SWE-Fixer",
+        "date": "2025-03-06",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "MASAI + GPT 4o (2024-06-12)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "MASAI",
+        "date": "2024-06-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Artemis Agent v1 (2024-11-20)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Artemis Agent v1",
+        "date": "2024-11-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "nFactorial (2024-10-07)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "nFactorial",
+        "date": "2024-10-07",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-Fixer (Qwen2.5-7b retriever + Qwen2.5-72b editor) 20241128",
+        "model_display": "Qwen2.5 (7B + 72B)",
+        "org": "Qwen",
+        "agent": "SWE-Fixer",
+        "date": "2024-11-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Lingma Agent + Lingma SWE-GPT 72b (v0925)",
+        "model_display": "Lingma SWE-GPT 72b (v0925)",
+        "org": "OpenAI",
+        "agent": "Lingma Agent",
+        "date": "2024-10-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 2.5 Flash (2025-04-17)",
+        "model_display": "Gemini 2.5 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 66.942859175,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent + GPT4o",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2024-10-16",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AppMap Navie + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AppMap Navie",
+        "date": "2024-06-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + gpt-oss-120b",
+        "model_display": "gpt-oss-120b",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-07",
+        "cost": 28.559527899999996,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "nFactorial (2024-10-01)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "nFactorial",
+        "date": "2024-10-01",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240430-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-05-09",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Lingma Agent + Lingma SWE-GPT 72b (v0918)",
+        "model_display": "Lingma SWE-GPT 72b (v0918)",
+        "org": "OpenAI",
+        "agent": "Lingma Agent",
+        "date": "2024-09-18",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EPAM AI/Run Developer Agent + GPT4o",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "EPAM AI/Run Developer Agent",
+        "date": "2024-08-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "mini-SWE-agent + GPT 4.1 mini (2025-04-14)",
+        "model_display": "GPT 4.1 mini",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 217.57707639999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "MCTS-Refine-7B",
+        "model_display": "MCTS Refine 7B",
+        "org": null,
+        "agent": "MCTS-Refine-7B",
+        "date": "2025-06-27",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-07-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + GPT 4o (2024-11-20)",
+        "model_display": "GPT 4o",
+        "org": "OpenAI",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 765.5740625000001,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Llama 4 Maverick Instruct",
+        "model_display": "Llama 4 Maverick Instruct",
+        "org": "Meta",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 156.85304879999998,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Lingma Agent + Lingma SWE-GPT 7b (v0925)",
+        "model_display": "Lingma SWE-GPT 7b (v0925)",
+        "org": "OpenAI",
+        "agent": "Lingma Agent",
+        "date": "2024-10-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Gemini 2.0 Flash",
+        "model_display": "Gemini 2.0 Flash",
+        "org": "Google DeepMind",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-26",
+        "cost": 0,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Lingma Agent + Lingma SWE-GPT 7b (v0918)",
+        "model_display": "Lingma SWE-GPT 7b (v0918)",
+        "org": "OpenAI",
+        "agent": "Lingma Agent",
+        "date": "2024-09-18",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Llama 4 Scout Instruct",
+        "model_display": "Llama 4 Scout Instruct",
+        "org": "Meta",
+        "agent": "mini-SWE-agent",
+        "date": "2025-07-20",
+        "cost": 57.8157615,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "mini-SWE-agent + Qwen2.5-Coder 32B Instruct",
+        "model_display": "Qwen2.5-Coder 32B Instruct",
+        "org": "Qwen",
+        "agent": "mini-SWE-agent",
+        "date": "2025-08-03",
+        "cost": 34.05807032999999,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 2",
+        "model_display": "Claude 2",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 7B",
+        "model_display": "SWE-Llama 7B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 13B",
+        "model_display": "SWE-Llama 13B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + ChatGPT 3.5",
+        "model_display": "GPT-3.5",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      }
+    ],
+    "Lite": [
+      {
+        "model": "ExpeRepair-v1.0 + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "ExpeRepair-v1.0",
+        "date": "2025-06-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Refact.ai Agent",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Refact.ai Agent",
+        "date": "2025-04-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "KGCompass + Claude 4 Sonnet (20250514)",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "KGCompass",
+        "date": "2025-09-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 4 Sonnet",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2025-05-26",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Isoform",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Isoform",
+        "date": "2025-01-14",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SemAgent_Multi-v1.0",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "SemAgent_Multi-v1.0",
+        "date": "2025-06-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Isea",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Isea",
+        "date": "2025-09-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "EntroPO + R2E + Qwen3-Coder-30B-A3B-Instruct",
+        "model_display": "Qwen3-Coder-30B-A3B-Instruct",
+        "org": "Qwen",
+        "agent": "EntroPO + R2E",
+        "date": "2025-09-01",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Blackbox AI Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Blackbox AI Agent",
+        "date": "2024-12-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Codev",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Codev",
+        "date": "2025-05-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Gru(2024-12-08)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Gru",
+        "date": "2024-12-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "ExpeRepair-v1.0",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "ExpeRepair-v1.0",
+        "date": "2025-06-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Globant Code Fixer Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Globant Code Fixer Agent",
+        "date": "2024-11-27",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-agent + Claude 3.7 Sonnet",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2025-02-26",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "devlo",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "devlo",
+        "date": "2024-11-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "DARS Agent",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "DARS Agent",
+        "date": "2025-02-05",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "KGCompass + Claude 3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "KGCompass",
+        "date": "2025-06-19",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "EntroPO + R2E + Qwen3-Coder-30B-A3B-Instruct",
+        "model_display": "Qwen3-Coder-30B-A3B-Instruct",
+        "org": "Qwen",
+        "agent": "EntroPO + R2E",
+        "date": "2025-09-01",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Kodu-v1 + Claude-3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Kodu-v1",
+        "date": "2024-12-07",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "CodeFuse-CGM",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "CodeFuse-CGM",
+        "date": "2025-03-10",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "CodeStory Aide + Mixed Models",
+        "model_display": "Mixed Models",
+        "org": null,
+        "agent": "CodeStory Aide",
+        "date": "2024-07-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Lingxi",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Lingxi",
+        "date": "2025-05-09",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "model_display": "CodeAct v2.1 (claude-3-5-sonnet-20241022)",
+        "org": "Anthropic",
+        "agent": "OpenHands",
+        "date": "2024-10-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Codart AI",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Codart AI",
+        "date": "2025-05-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "PatchKitty-0.9 + Claude-3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "PatchKitty-0.9",
+        "date": "2024-12-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OrcaLoca + Agentless-1.5 + Claude-3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "OrcaLoca + Agentless-1.5",
+        "date": "2025-01-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Composio SWE-Kit (2024-10-30)",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "Composio SWE-Kit",
+        "date": "2024-10-30",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Agentless-1.5 + Claude-3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Agentless-1.5",
+        "date": "2024-12-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenCSG Starship Agentic Coder + GPT 4 (0806)",
+        "model_display": "GPT-4 (0806)",
+        "org": "OpenAI",
+        "agent": "OpenCSG Starship Agentic Coder",
+        "date": "2025-01-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Bytedance MarsCode Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Bytedance MarsCode Agent",
+        "date": "2024-09-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Moatless Tools + Claude 3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Moatless Tools",
+        "date": "2025-01-14",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Moatless Tools + Claude 3.5 Sonnet (20241022)",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Moatless Tools",
+        "date": "2024-11-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Honeycomb",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Honeycomb",
+        "date": "2024-08-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AbanteAI MentatBot + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AbanteAI MentatBot",
+        "date": "2024-06-27",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Patched.Codes Patchwork",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Patched.Codes Patchwork",
+        "date": "2025-01-04",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "KGCompass + DeepSeek V3",
+        "model_display": "DeepSeek V3",
+        "org": "DeepSeek",
+        "agent": "KGCompass",
+        "date": "2025-06-09",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "AppMap Navie v2",
+        "model_display": "Multiple",
+        "org": "Anthropic",
+        "agent": "AppMap Navie v2",
+        "date": "2024-11-13",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "CodeFuse-AAIS",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "CodeFuse-AAIS",
+        "date": "2025-01-04",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Gru(2024-08-11)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Gru",
+        "date": "2024-08-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Isoform",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Isoform",
+        "date": "2024-08-29",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SuperCoder2.0",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "SuperCoder2.0",
+        "date": "2024-08-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Bytedance MarsCode Agent + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Bytedance MarsCode Agent",
+        "date": "2024-07-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Alibaba Lingma Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Alibaba Lingma Agent",
+        "date": "2024-06-22",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Agentless Lite + O3 Mini (20250214)",
+        "model_display": "O3 Mini",
+        "org": "OpenAI",
+        "agent": "Agentless Lite",
+        "date": "2025-02-14",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Agentless-1.5 + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Agentless-1.5",
+        "date": "2024-10-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Factory Code Droid",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Factory Code Droid",
+        "date": "2024-06-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "CodeShellTester + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "CodeShellTester",
+        "date": "2024-11-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Moatless Tools + Deepseek V3",
+        "model_display": "Deepseek V3",
+        "org": "DeepSeek",
+        "agent": "Moatless Tools",
+        "date": "2025-01-11",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "AutoCodeRover (v20240620) + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AutoCodeRover",
+        "date": "2024-06-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Aegis - o3-mini_1.0",
+        "model_display": "o3-mini_1.0",
+        "org": "OpenAI",
+        "agent": "Aegis",
+        "date": "2025-02-07",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AIGCode Infant-Coder(2024-08-30)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "AIGCode Infant-Coder",
+        "date": "2024-09-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Kortix AI (claude-3-5-sonnet-20241022)",
+        "model_display": "claude-3-5-sonnet-20241022",
+        "org": "Anthropic",
+        "agent": "Kortix AI",
+        "date": "2024-12-03",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240719-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-07-21",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Agentless + RepoGraph + GPT-4o",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Agentless + RepoGraph",
+        "date": "2024-08-08",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "CodeR + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "CodeR",
+        "date": "2024-06-04",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "reproducedRG",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "reproducedRG",
+        "date": "2024-11-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SIMA + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SIMA",
+        "date": "2024-07-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "MASAI + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "MASAI",
+        "date": "2024-06-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Agentless + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Agentless",
+        "date": "2024-06-30",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Moatless Tools + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Moatless Tools",
+        "date": "2024-06-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands + CodeAct v1.8",
+        "model_display": "CodeAct v1.8",
+        "org": "Anthropic",
+        "agent": "OpenHands",
+        "date": "2024-07-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "IBM Research Agent-101",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "IBM Research Agent-101",
+        "date": "2024-06-12",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Aider + GPT 4o & Claude 3 Opus",
+        "model_display": "GPT-4o & Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "Aider",
+        "date": "2024-05-23",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "HyperAgent",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "HyperAgent",
+        "date": "2024-09-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-Fixer (Qwen2.5-7b retriever + Qwen2.5-72b editor)",
+        "model_display": "Qwen2.5 (7B + 72B)",
+        "org": "Qwen",
+        "agent": "SWE-Fixer",
+        "date": "2025-03-06",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "Moatless Tools + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Moatless Tools",
+        "date": "2024-06-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "IBM AI Agent SWE-1.0 (with open LLMs)",
+        "model_display": "Multiple",
+        "org": null,
+        "agent": "IBM AI Agent SWE-1.0",
+        "date": "2024-10-16",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "OpenCSG StarShip CodeGenAgent + GPT 4 (0613)",
+        "model_display": "GPT-4 (0613)",
+        "org": "OpenAI",
+        "agent": "OpenCSG StarShip CodeGenAgent",
+        "date": "2024-05-24",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "SWE-Fixer (Qwen2.5-7b retriever + Qwen2.5-72b editor) 20241128",
+        "model_display": "Qwen2.5 (7B + 72B)",
+        "org": "Qwen",
+        "agent": "SWE-Fixer",
+        "date": "2024-11-28",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-06-20",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "AppMap Navie + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "AppMap Navie",
+        "date": "2024-06-15",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Bytedance AutoSE (based on SWE-Agent) + GPT4/GPT4o Mixed (20240828)",
+        "model_display": "Multiple",
+        "org": "OpenAI",
+        "agent": "Bytedance AutoSE",
+        "date": "2024-08-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Amazon Q Developer Agent (v20240430-dev)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Amazon Q Developer Agent",
+        "date": "2024-05-09",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "AutoCodeRover (v20240408) + GPT 4 (0125)",
+        "model_display": "GPT-4 (0125)",
+        "org": "OpenAI",
+        "agent": "AutoCodeRover",
+        "date": "2024-05-30",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4o (2024-05-13)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-07-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "MCTS-Refine-7B",
+        "model_display": "MCTS Refine 7B",
+        "org": null,
+        "agent": "MCTS-Refine-7B",
+        "date": "2025-06-27",
+        "cost": null,
+        "os_model": true,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 3 Opus",
+        "model_display": "Claude 3 Opus",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 2",
+        "model_display": "Claude 2",
+        "org": "Anthropic",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + GPT 4 (1106)",
+        "model_display": "GPT-4 (1106)",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2024-04-02",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 7B",
+        "model_display": "SWE-Llama 7B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + SWE-Llama 13B",
+        "model_display": "SWE-Llama 13B",
+        "org": "Meta",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + ChatGPT 3.5",
+        "model_display": "GPT-3.5",
+        "org": "OpenAI",
+        "agent": "RAG baseline",
+        "date": "2023-10-10",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      }
+    ],
+    "Multimodal": [
+      {
+        "model": "GUIRepair + o3 (2025-04-16)",
+        "model_display": "o3",
+        "org": "OpenAI",
+        "agent": "GUIRepair",
+        "date": "2025-07-01",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Codefuse_Pycfuse_SVR",
+        "model_display": "o3",
+        "org": "OpenAI",
+        "agent": "Codefuse_Pycfuse_SVR",
+        "date": "2025-11-17",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Refact.ai Agent",
+        "model_display": "Claude 4 Sonnet",
+        "org": "Anthropic",
+        "agent": "Refact.ai Agent",
+        "date": "2025-06-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands-Versa (Claude-Sonnet 4)",
+        "model_display": "Claude Sonnet 4",
+        "org": "Anthropic",
+        "agent": "OpenHands-Versa",
+        "date": "2025-05-28",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GUIRepair + o4-mini (2025-04-16)",
+        "model_display": "o4-mini",
+        "org": "OpenAI",
+        "agent": "GUIRepair",
+        "date": "2025-05-31",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "OpenHands-Versa (Claude-3.7 Sonnet)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "OpenHands-Versa",
+        "date": "2025-05-09",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "GUIRepair + GPT 4.1 (2025-04-14)",
+        "model_display": "GPT-4.1",
+        "org": "OpenAI",
+        "agent": "GUIRepair",
+        "date": "2025-05-31",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Zencoder (2025-04-01)",
+        "model_display": "Claude 3.7 Sonnet",
+        "org": "Anthropic",
+        "agent": "Zencoder",
+        "date": "2025-04-01",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "GUIRepair + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "GUIRepair",
+        "date": "2025-05-31",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Globant Code Fixer Agent",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Globant Code Fixer Agent",
+        "date": "2025-03-25",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Zencoder (2025-03-10)",
+        "model_display": "Undisclosed",
+        "org": null,
+        "agent": "Zencoder",
+        "date": "2025-03-11",
+        "cost": null,
+        "os_model": false,
+        "os_system": false
+      },
+      {
+        "model": "Agentless Lite + Claude-3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Agentless Lite",
+        "date": "2025-02-26",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent Multimodal + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent Multimodal",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + Claude Sonnet 3.5",
+        "model_display": "Claude Sonnet 3.5",
+        "org": "Anthropic",
+        "agent": "SWE-agent",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent JavaScript + Claude Sonnet 3.5",
+        "model_display": "Claude Sonnet 3.5",
+        "org": "Anthropic",
+        "agent": "SWE-agent JavaScript",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent Multimodal + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "SWE-agent Multimodal",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "SWE-agent JavaScript + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "SWE-agent JavaScript",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Agentless + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "Agentless",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "RAG",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "RAG + Claude 3.5 Sonnet",
+        "model_display": "Claude 3.5 Sonnet",
+        "org": "Anthropic",
+        "agent": "RAG",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      },
+      {
+        "model": "Agentless + GPT 4o (2024-08-06)",
+        "model_display": "GPT-4o",
+        "org": "OpenAI",
+        "agent": "Agentless",
+        "date": "2024-10-06",
+        "cost": null,
+        "os_model": false,
+        "os_system": true
+      }
+    ]
+  }
+}
