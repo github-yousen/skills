@@ -340,7 +340,7 @@ python {skill_dir}/scripts/yuque_client.py md2asl --input-file content.md --outp
 将 Markdown 转为语雀 **ASL 格式**（编辑器真实存储格式，每个元素带 `data-lake-id`）。
 
 - 与 `md2lake`（HTML）的区别：**ASL 是语雀编辑器的原生格式，回写时不会破坏折叠块 / 画板等复杂结构**
-- 支持：标题、段落、引用块、有序 / 无序列表、加粗、行内代码
+- 支持：标题、段落、**表格**、引用块、有序 / 无序列表、加粗、行内代码
 - 典型用法：`md2asl` 生成 ASL → `update-doc --asl-file` 或 `replace-section --body-file` 提交
 
 ### 全局参数
