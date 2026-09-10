@@ -18,6 +18,7 @@
 #   get-doc-outline <doc_id> <book_id>           - 获取文档标题层级结构
 #   replace-section <doc_id> <book_id> --heading <text> --body-file <path> - 替换指定section
 #   md2lake [text] [--input-file <path>]         - Markdown 转 lake HTML
+#   export-md <doc_id> <book_id>                 - 导出文档为语雀原生 Markdown（保真）
 #
 # 全局参数（可用于任何命令）:
 #   --output-file <path>  - 将结果输出到文件而非 stdout
@@ -787,11 +788,81 @@ def md2lake(md_text):
     return ''.join(html_parts)
 
 
+def raw_get(url, cookie='', csrf_token='', x_login='', referer='https://www.yuque.com/'):
+    """发送 GET 请求并返回完整字节内容（不截断、不解析 JSON）。"""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': cookie,
+        'Referer': referer,
+        'Upgrade-Insecure-Requests': '1',
+    }
+    req = urllib.request.Request(url, headers=headers, method='GET')
+    with urllib.request.urlopen(req, context=SSL_CTX, timeout=120) as resp:
+        return resp.read()
+
+
+def cmd_export_md(cookie, csrf_token, x_login, doc_id, book_id):
+    """导出文档为语雀原生 Markdown（保真度高于自行解析 lake HTML）。
+
+    步骤：
+      1. GET /api/docs/{doc_id}?book_id=&mode=edit  → 取 doc slug
+      2. list-books                                 → 由 book_id 取 book slug
+      3. GET /{user}/{book}/{doc}/markdown?attachment=true&latexcode=true
+             &anchor=true&linebreak=true&useMdai=true  → 返回完整 Markdown 文本
+    """
+    doc = cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit')
+    if isinstance(doc, dict) and '_error' in doc:
+        return doc
+    doc_slug = doc.get('slug')
+    if not doc_slug:
+        return {'_error': '无法获取文档 slug'}
+
+    books = cmd_list_books(cookie, csrf_token, x_login)
+    if isinstance(books, dict) and '_error' in books:
+        return books
+    book = next((b for b in books if b.get('id') == int(book_id)), None)
+    if not book:
+        return {'_error': f'未找到 book_id={book_id} 对应的知识库'}
+    book_slug = book.get('slug')
+    user_login = x_login or book.get('user') or ''
+
+    params = urllib.parse.urlencode({
+        'attachment': 'true',
+        'latexcode': 'true',
+        'anchor': 'true',
+        'linebreak': 'true',
+        'useMdai': 'true',
+    })
+    url = f'{API_BASE}/{user_login}/{book_slug}/{doc_slug}/markdown?{params}'
+    referer = f'{API_BASE}/{user_login}/{book_slug}/{doc_slug}'
+
+    try:
+        raw = raw_get(url, cookie=cookie, csrf_token=csrf_token, x_login=x_login, referer=referer)
+    except urllib.error.HTTPError as e:
+        return {'_error': f'HTTP {e.code}', '_url': url}
+    except Exception as e:
+        return {'_error': str(e), '_url': url}
+
+    text = raw.decode('utf-8', errors='replace')
+    return {
+        '_markdown': text,
+        'doc_id': doc_id,
+        'book_id': book_id,
+        'doc_slug': doc_slug,
+        'book_slug': book_slug,
+        'user_login': user_login,
+        'url': url,
+        'chars': len(text),
+    }
+
+
 def main():
     if len(sys.argv) < 2:
         print('用法: python yuque_client.py <command> [args...]')
         print('命令: whoami, list-books, list-docs, find-docs, get-doc, get-toc, create-doc, update-doc,')
-        print('      delete-doc, search, get-doc-versions, get-doc-outline, replace-section, md2lake')
+        print('      delete-doc, search, get-doc-versions, get-doc-outline, replace-section, md2lake, export-md')
 
         print('全局参数: --output-file <path>, --body-only')
         sys.exit(1)
@@ -963,6 +1034,21 @@ def main():
             sys.stdout.buffer.write(lake_html.encode('utf-8'))
             sys.stdout.buffer.write(b'\n')
         return
+    elif command == 'export-md':
+        doc_id = cmd_args[0]
+        book_id = int(cmd_args[1])
+        result = cmd_export_md(cookie, csrf_token, x_login, doc_id, book_id)
+        if isinstance(result, dict) and '_markdown' in result:
+            md_text = result.pop('_markdown')
+            if output_file:
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(md_text)
+                print(f'Markdown written to: {output_file} ({len(md_text)} chars)')
+            else:
+                sys.stdout.buffer.write(md_text.encode('utf-8'))
+                sys.stdout.buffer.write(b'\n')
+            return
+        # 失败时走统一 JSON 输出
     else:
         print(f'未知命令: {command}')
         sys.exit(1)
