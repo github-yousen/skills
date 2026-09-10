@@ -67,6 +67,7 @@ description: |
 9. **删除文档**：属于破坏性操作，必须先向用户确认目标文档标题、`doc_id` 和 `book_id`。
 10. **凭证失效**：返回 `401/403` 时，提示用户重新获取 Cookie 和 `yuque_ctoken`。
 11. **表格/画板文档限制**：`format` 为 `lakesheet`（表格）或 `lakeboard`（画板）的文档，`body` 通过本 API 返回为空，无法用 `get-doc` / `get-doc-outline` / `replace-section` 读写正文。遇到此类文档应直接告知用户该限制，`resolve-url` 会用 `is_sheet` / `is_board` 标记出来。
+12. **备份 / 同步整篇文档**：优先用 `export-md`（语雀官方导出接口），保真度远高于 `get-doc` + 自行转换 lake HTML。
 
 ---
 
@@ -311,6 +312,20 @@ python {skill_dir}/scripts/yuque_client.py md2lake "## 标题\n正文"
 将 Markdown 转为语雀 lake HTML 格式。支持：标题、加粗/斜体/删除线、行内代码、链接、图片、引用块、有序/无序列表、代码块、表格、分割线。所有纯文本与代码均自动做 HTML 转义（`< > &`），不会破坏结构。
 
 **推荐搭配 update-doc 使用**：先 md2lake 转格式，再 update-doc --body-file 上传。
+
+### 14. 导出文档为原生 Markdown（推荐用于备份 / 同步）
+
+```bash
+python {skill_dir}/scripts/yuque_client.py export-md <doc_id> <book_id> --output-file doc.md
+```
+
+调用语雀**官方导出接口**，直接拿到原生 Markdown，保真度远高于自行解析 `get-doc` 返回的 lake HTML。
+
+- **内部流程**：`get-doc`（取 doc slug）→ `list-books`（取 book slug）→ `GET /{user}/{book}/{doc}/markdown?attachment=true&latexcode=true&anchor=true&linebreak=true&useMdai=true`
+- **保留内容**：标题层级、表格、代码块、PlantUML / 画板（以代码块形式）、图片链接、**文字颜色**（`<font style="...">`）、图片 OCR 注释
+- **适用场景**：把语雀文档同步到本地仓库 / Git / 其他平台
+
+> ⚠️ 导出结果会保留 `<font style="color:...">` 等语雀样式标签；如需纯净版，可自行清洗掉。
 
 ### 全局参数
 

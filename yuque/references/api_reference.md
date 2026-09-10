@@ -151,6 +151,36 @@ Content-Type: application/json
 
 **请求体**: `{book_id}`
 
+### POST /api/docs/{doc_id}/export
+触发文档导出任务（导出弹窗点「导出」时调用）。
+
+**请求体**:
+```json
+{
+  "type": "markdown",
+  "force": 0,
+  "options": "{\"latexType\":2,\"enableAnchor\":1,\"enableBreak\":1,\"useMdai\":1}"
+}
+```
+
+**说明**: `type` 支持 `markdown` / `pdf` / `docx` 等；`force:0` 表示有缓存则复用。
+
+### GET /{user}/{book_slug}/{doc_slug}/markdown
+**下载原生 Markdown**（导出后点「下载」时调用），返回完整 Markdown 纯文本。
+
+**参数**:
+- `attachment=true` - 附件以链接形式导出
+- `latexcode=true` - LaTeX 公式保留为代码
+- `anchor=true` - 保留锚点
+- `linebreak=true` - 保留换行
+- `useMdai=true` - 启用 MdAI
+
+**注意**:
+- URL 中的 doc 段用的是 **slug**（不是 doc_id），需先通过 `GET /api/docs/{doc_id}?mode=edit` 取 `slug`
+- 私有文档需携带 Cookie
+- 返回为纯文本（非 JSON），可直接保存为 `.md`
+- 导出结果保留 `<font style="...">` 等样式标签与图片 OCR 注释
+
 ---
 
 ## 四、搜索
