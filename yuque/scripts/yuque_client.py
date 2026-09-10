@@ -867,6 +867,39 @@ def md2asl(md_text):
     while i < len(lines):
         line = lines[i]
 
+        # 表格：当前行像表头，且下一行是分隔行
+        if '|' in line and i + 1 < len(lines) and re.match(
+            r'^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$', lines[i + 1]
+        ):
+            flush_list()
+
+            def _cells(s):
+                s = s.strip()
+                if s.startswith('|'):
+                    s = s[1:]
+                if s.endswith('|'):
+                    s = s[:-1]
+                return [c.strip() for c in s.split('|')]
+
+            rows = [_cells(line)]
+            i += 2  # 跳过表头 + 分隔行
+            while i < len(lines) and '|' in lines[i] and lines[i].strip():
+                rows.append(_cells(lines[i]))
+                i += 1
+            tid = _lid()
+            trs = []
+            for row in rows:
+                tds = []
+                for cell in row:
+                    td_id, p_id = _lid(), _lid()
+                    tds.append(f'<td data-lake-id="{td_id}" id="{td_id}">'
+                               f'<p data-lake-id="{p_id}" id="{p_id}">{_asl_inline(cell)}</p></td>')
+                tr_id = _lid()
+                trs.append(f'<tr data-lake-id="{tr_id}" id="{tr_id}">' + ''.join(tds) + '</tr>')
+            parts.append(f'<table data-lake-id="{tid}" id="{tid}"><tbody>'
+                         + ''.join(trs) + '</tbody></table>')
+            continue
+
         # 标题
         m = re.match(r'^(#{1,6})\s+(.+)$', line)
         if m:
