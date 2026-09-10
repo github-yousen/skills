@@ -18,6 +18,7 @@
 #   get-doc-outline <doc_id> <book_id>           - 获取文档标题层级结构
 #   replace-section <doc_id> <book_id> --heading <text> --body-file <path> - 替换指定section
 #   md2lake [text] [--input-file <path>]         - Markdown 转 lake HTML
+#   md2asl [text] [--input-file <path>]          - Markdown 转语雀 ASL（编辑器格式，保结构）
 #   export-md <doc_id> <book_id>                 - 导出文档为语雀原生 Markdown（保真）
 #
 # 全局参数（可用于任何命令）:
@@ -335,6 +336,9 @@ def cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit'):
         'description': d.get('description', ''),
         'body': d.get('body', ''),
         'body_draft': d.get('body_draft', ''),
+        'body_asl': d.get('body_asl', ''),
+        'body_draft_asl': d.get('body_draft_asl', ''),
+        'draft_version': d.get('draft_version', 0),
         'created_at': d.get('created_at'),
         'updated_at': d.get('updated_at'),
         'published_at': d.get('published_at'),
@@ -378,32 +382,31 @@ def cmd_create_doc(cookie, csrf_token, x_login, book_id, title, slug='', body=''
     }
 
 
-def cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title=None, body=None):
+def cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title=None, body=None, body_asl=None):
     """更新文档。
-    
-    使用两步更新策略：
-    1. PUT /api/docs/:id/content — 更新 body_draft（语雀前端渲染依赖此字段）
-    2. PUT /api/docs/:id — 更新 body 和 title（已发布内容）
-    
-    这样确保语雀网页端能立即看到更新后的内容。
+
+    两种模式：
+    - **body_asl 模式（推荐）**：传 ASL（语雀编辑器原生格式）。只通过 content 接口更新，
+      其余结构保持原样，**不会破坏折叠块 / 画板等复杂结构**。
+    - **body 模式（旧）**：传 HTML。会把 HTML 塞进 ASL 字段，语雀容错解析后
+      可能把折叠块 `<summary>` 填满内容（视觉上变成"展开"），**不推荐**。
     """
     result_info = {}
-    
-    # Step 1: 如果有 body，通过 content 接口更新 body_draft
-    if body is not None:
-        # 先获取 draft_version
-        doc_info = api_request('GET', f'/api/docs/{doc_id}',
-                               params={'book_id': book_id, 'mode': 'edit'},
-                               cookie=cookie, csrf_token=csrf_token, x_login=x_login)
-        if '_error' in doc_info:
-            return {'_error': 'Failed to get draft_version', '_detail': doc_info}
-        
-        draft_version = doc_info.get('data', {}).get('draft_version', 0)
-        
+
+    # 先获取 draft_version
+    doc_info = api_request('GET', f'/api/docs/{doc_id}',
+                           params={'book_id': book_id, 'mode': 'edit'},
+                           cookie=cookie, csrf_token=csrf_token, x_login=x_login)
+    if '_error' in doc_info:
+        return {'_error': 'Failed to get draft_version', '_detail': doc_info}
+    draft_version = doc_info.get('data', {}).get('draft_version', 0)
+
+    payload = body_asl if body_asl is not None else body
+    if payload is not None:
         content_data = {
             'format': 'lake',
-            'body_asl': body,
-            'body_draft_asl': body,
+            'body_asl': payload,
+            'body_draft_asl': payload,
             'save_type': 'user',
             'draft_version': draft_version,
         }
@@ -413,27 +416,28 @@ def cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title=None, bod
             result_info['_content_warning'] = f"content接口失败: {r_content.get('_error', '')}"
         else:
             result_info['content_updated'] = True
-    
-    # Step 2: 用普通接口更新 body 和 title
+
+    # Step 2: 更新 title（HTML 模式下才同时更新 body）
     doc_data = {'book_id': book_id}
     if title is not None:
         doc_data['title'] = title
-    if body is not None:
+    if body is not None and body_asl is None:
         doc_data['body'] = body
-    
-    r = api_request('PUT', f'/api/docs/{doc_id}', data=doc_data,
-                    cookie=cookie, csrf_token=csrf_token, x_login=x_login)
-    if '_error' in r:
-        return {**result_info, '_error': r.get('_error'), '_body': r.get('_body', '')}
-    
-    d = r.get('data', {})
-    return {
-        **result_info,
-        'id': d.get('id'),
-        'title': d.get('title'),
-        'slug': d.get('slug'),
-        'book_id': d.get('book_id'),
-    }
+
+    if len(doc_data) > 1:
+        r = api_request('PUT', f'/api/docs/{doc_id}', data=doc_data,
+                        cookie=cookie, csrf_token=csrf_token, x_login=x_login)
+        if '_error' in r:
+            return {**result_info, '_error': r.get('_error'), '_body': r.get('_body', '')}
+        d = r.get('data', {})
+        result_info.update({
+            'id': d.get('id'),
+            'title': d.get('title'),
+            'slug': d.get('slug'),
+            'book_id': d.get('book_id'),
+        })
+
+    return result_info
 
 
 def cmd_delete_doc(cookie, csrf_token, x_login, doc_id, book_id):
@@ -517,17 +521,21 @@ def cmd_get_doc_outline(cookie, csrf_token, x_login, doc_id, book_id):
     return '\n'.join(lines)
 
 
-def cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_text, new_content):
+def cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_text, new_content, asl=True):
     """按 heading 文本定位 section，替换该 section 内容。
 
     定位方式：逐个枚举真实标题元素，找到内部纯文本【精确等于】或【包含】
     heading_text 的标题，作为 section 起点；section 终点为下一个同级或更高级标题。
     精确匹配优先，避免跨标题误删。
+
+    asl=True（默认，推荐）：基于 ASL 操作，只替换目标 section，
+    其余结构（折叠块 / 画板等）保持原样，不会被破坏。
+    asl=False：基于 HTML（旧行为，会把 HTML 塞进 ASL 字段，可能破坏复杂结构）。
     """
     doc = cmd_get_doc(cookie, csrf_token, x_login, doc_id, book_id, mode='edit')
     if '_error' in doc:
         return doc
-    body = doc.get('body', '')
+    body = doc.get('body_asl' if asl else 'body', '')
 
     headings = _iter_headings(body)
     if not headings:
@@ -566,10 +574,16 @@ def cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_te
 
     new_body = body[:section_start] + new_content + body[section_end:]
 
-    result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title=None, body=new_body)
+    if asl:
+        result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id,
+                                title=None, body_asl=new_body)
+    else:
+        result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id,
+                                title=None, body=new_body)
     result['section_replaced'] = heading_text
     result['original_length'] = len(body)
     result['new_length'] = len(new_body)
+    result['mode'] = 'asl' if asl else 'html'
     return result
 
 
@@ -788,6 +802,135 @@ def md2lake(md_text):
     return ''.join(html_parts)
 
 
+def _lid():
+    """生成语雀风格的 data-lake-id（u + 8位十六进制）。"""
+    import random
+    return 'u' + ''.join(random.choice('0123456789abcdef') for _ in range(8))
+
+
+def _asl_span(text):
+    """把一个纯文本片段包成 ASL span。"""
+    i = _lid()
+    return f'<span data-lake-id="{i}" id="{i}">{text}</span>'
+
+
+def _asl_inline(text):
+    """把 markdown 行内文本转成 ASL 片段序列（strong / code / 普通文本）。"""
+    import html as _html
+
+    def esc(s):
+        return _html.escape(s, quote=False)
+
+    out = []
+    pattern = re.compile(r'(\*\*.+?\*\*|`[^`]+`)')
+    pos = 0
+    for m in pattern.finditer(text):
+        if m.start() > pos:
+            out.append(_asl_span(esc(text[pos:m.start()])))
+        tok = m.group(0)
+        if tok.startswith('**'):
+            out.append('<strong>' + _asl_span(esc(tok[2:-2])) + '</strong>')
+        else:  # 行内代码
+            i = _lid()
+            out.append(f'<code data-lake-id="{i}" id="{i}">' + _asl_span(esc(tok[1:-1])) + '</code>')
+        pos = m.end()
+    if pos < len(text):
+        out.append(_asl_span(esc(text[pos:])))
+    return ''.join(out) if out else '<br>'
+
+
+def md2asl(md_text):
+    """将 Markdown 转换为语雀 ASL 格式（编辑器真实存储格式，含 data-lake-id）。
+
+    与 md2lake 的区别：ASL 是语雀编辑器的原生格式，用它提交能**保持折叠块等复杂结构不被破坏**。
+    """
+    lines = md_text.split('\n')
+    parts = []
+    i = 0
+    in_list = None       # 'ul' / 'ol'
+    list_id = None
+    list_items = []
+
+    def flush_list():
+        nonlocal in_list, list_id, list_items
+        if in_list and list_items:
+            lis = []
+            for it in list_items:
+                li_id = _lid()
+                lis.append(f'<li fid="{list_id}" data-lake-id="{li_id}" id="{li_id}">'
+                           + _asl_inline(it) + '</li>')
+            parts.append(f'<{in_list} list="{list_id}">' + ''.join(lis) + f'</{in_list}>')
+        in_list = None
+        list_id = None
+        list_items = []
+
+    while i < len(lines):
+        line = lines[i]
+
+        # 标题
+        m = re.match(r'^(#{1,6})\s+(.+)$', line)
+        if m:
+            flush_list()
+            lv = len(m.group(1))
+            bid = _lid()
+            parts.append(f'<h{lv} data-lake-id="{bid}" id="{bid}">'
+                         + _asl_inline(m.group(2)) + f'</h{lv}>')
+            i += 1
+            continue
+
+        # 引用块
+        if line.startswith('>'):
+            flush_list()
+            quotes = []
+            while i < len(lines) and lines[i].startswith('>'):
+                quotes.append(lines[i][1:].lstrip())
+                i += 1
+            bid = _lid()
+            inner = []
+            for q in quotes:
+                pid = _lid()
+                inner.append(f'<p data-lake-id="{pid}" id="{pid}">'
+                             + (_asl_inline(q) if q.strip() else '<br>') + '</p>')
+            parts.append(f'<blockquote data-lake-id="{bid}" id="{bid}">'
+                         + ''.join(inner) + '</blockquote>')
+            continue
+
+        # 无序列表
+        m = re.match(r'^[-*+]\s+(.+)$', line)
+        if m:
+            if in_list != 'ul':
+                flush_list()
+                in_list, list_id, list_items = 'ul', _lid(), []
+            list_items.append(m.group(1))
+            i += 1
+            continue
+
+        # 有序列表
+        m = re.match(r'^\d+\.\s+(.+)$', line)
+        if m:
+            if in_list != 'ol':
+                flush_list()
+                in_list, list_id, list_items = 'ol', _lid(), []
+            list_items.append(m.group(1))
+            i += 1
+            continue
+
+        # 空行
+        if not line.strip():
+            flush_list()
+            i += 1
+            continue
+
+        # 普通段落
+        flush_list()
+        bid = _lid()
+        parts.append(f'<p data-lake-id="{bid}" id="{bid}">' + _asl_inline(line) + '</p>')
+        i += 1
+
+    flush_list()
+    return ''.join(parts)
+
+
 def raw_get(url, cookie='', csrf_token='', x_login='', referer='https://www.yuque.com/'):
     """发送 GET 请求并返回完整字节内容（不截断、不解析 JSON）。"""
     headers = {
@@ -862,7 +1005,7 @@ def main():
     if len(sys.argv) < 2:
         print('用法: python yuque_client.py <command> [args...]')
         print('命令: whoami, list-books, list-docs, find-docs, get-doc, get-toc, create-doc, update-doc,')
-        print('      delete-doc, search, get-doc-versions, get-doc-outline, replace-section, md2lake, export-md')
+        print('      delete-doc, search, get-doc-versions, get-doc-outline, replace-section, md2lake, md2asl, export-md')
 
         print('全局参数: --output-file <path>, --body-only')
         sys.exit(1)
@@ -943,7 +1086,8 @@ def main():
         book_id = int(cmd_args[1])
         title = None
         body = None
-        # 解析剩余参数，支持 --body-file
+        body_asl = None
+        # 解析剩余参数，支持 --body-file（HTML）/ --asl-file（ASL，推荐）
         j = 2
         while j < len(cmd_args):
             if cmd_args[j] == '--body-file':
@@ -953,15 +1097,21 @@ def main():
                     with open(file_path, 'r', encoding='utf-8') as f:
                         body = f.read()
                 j += 1
+            elif cmd_args[j] == '--asl-file':
+                j += 1
+                if j < len(cmd_args):
+                    with open(cmd_args[j], 'r', encoding='utf-8') as f:
+                        body_asl = f.read()
+                j += 1
             elif title is None:
                 title = cmd_args[j]
                 j += 1
-            elif body is None:
+            elif body is None and body_asl is None:
                 body = cmd_args[j]
                 j += 1
             else:
                 j += 1
-        result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title, body)
+        result = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id, title, body, body_asl)
     elif command == 'delete-doc':
         doc_id = cmd_args[0]
         book_id = int(cmd_args[1])
@@ -1009,7 +1159,7 @@ def main():
             print('错误: replace-section 需要 --body-file 参数')
             sys.exit(1)
         result = cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_text, new_content)
-    elif command == 'md2lake':
+    elif command in ('md2lake', 'md2asl'):
         md_text = None
         j = 0
         while j < len(cmd_args):
@@ -1025,13 +1175,14 @@ def main():
         if md_text is None:
             # 从 stdin 读取
             md_text = sys.stdin.read()
-        lake_html = md2lake(md_text)
+        out_text = md2asl(md_text) if command == 'md2asl' else md2lake(md_text)
+        label = 'ASL' if command == 'md2asl' else 'Lake HTML'
         if output_file:
             with open(output_file, 'w', encoding='utf-8') as f:
-                f.write(lake_html)
-            print(f'Lake HTML written to: {output_file} ({len(lake_html)} chars)')
+                f.write(out_text)
+            print(f'{label} written to: {output_file} ({len(out_text)} chars)')
         else:
-            sys.stdout.buffer.write(lake_html.encode('utf-8'))
+            sys.stdout.buffer.write(out_text.encode('utf-8'))
             sys.stdout.buffer.write(b'\n')
         return
     elif command == 'export-md':

@@ -68,6 +68,7 @@ description: |
 10. **凭证失效**：返回 `401/403` 时，提示用户重新获取 Cookie 和 `yuque_ctoken`。
 11. **表格/画板文档限制**：`format` 为 `lakesheet`（表格）或 `lakeboard`（画板）的文档，`body` 通过本 API 返回为空，无法用 `get-doc` / `get-doc-outline` / `replace-section` 读写正文。遇到此类文档应直接告知用户该限制，`resolve-url` 会用 `is_sheet` / `is_board` 标记出来。
 12. **备份 / 同步整篇文档**：优先用 `export-md`（语雀官方导出接口），保真度远高于 `get-doc` + 自行转换 lake HTML。
+13. **回写文档必须用 ASL**：`PUT /api/docs/:id/content` 的 `body_asl` 字段要的是 **ASL 格式**（带 `data-lake-id`），不是 HTML。传 HTML 会被容错解析，**把折叠块 `<details>` 的 `<summary>` 填满内容（视觉上变"展开"）**。用 `md2asl` 生成 ASL，或直接让 `replace-section` 基于 ASL 操作（默认已是）。
 
 ---
 
@@ -171,20 +172,23 @@ python {skill_dir}/scripts/yuque_client.py create-doc <book_id> <title> [slug] [
 
 ### 8. 更新文档
 
-```bash
-python {skill_dir}/scripts/yuque_client.py update-doc <doc_id> <book_id> [title] [body]
-```
-
-**长内容推荐用 `--body-file` 从文件读取**（避免命令行长度限制）：
+> ⚠️ **重要**：语雀 `body_asl` 字段要的是 **ASL 格式**（带 `data-lake-id`），**不是 HTML**。
+> 传 HTML 会被语雀容错解析，**把折叠块 `<details>` 的 `<summary>` 填满内容（视觉上变成"展开"）**。
+> 因此**推荐用 `--asl-file`**（ASL 模式）；`--body-file`（HTML）仅为兼容旧用法保留。
 
 ```bash
+# 推荐：ASL 模式（保持折叠块 / 画板等复杂结构不被破坏）
+python {skill_dir}/scripts/yuque_client.py update-doc <doc_id> <book_id> --asl-file /path/to/body.asl.html
+
+# 兼容：HTML 模式（可能破坏复杂结构）
 python {skill_dir}/scripts/yuque_client.py update-doc <doc_id> <book_id> "新标题" --body-file /path/to/body.html
 ```
 
 - 传入需要修改的字段，未传的字段保持不变
 - `book_id` 必传
-- `--body-file` 可以放在 title 之前或之后，脚本会自动识别
-- **内部机制**：脚本会通过 `/api/docs/:id/content` 接口同步更新 `body_draft`（语雀前端渲染依赖此字段），再通过 `/api/docs/:id` 更新已发布的 `body`，确保网页端立即可见
+- `--body-file` / `--asl-file` 可以放在 title 之前或之后，脚本会自动识别
+- ASL 内容可用 `md2asl` 从 Markdown 生成
+- **内部机制**：通过 `/api/docs/:id/content` 接口更新 `body_asl` / `body_draft_asl`，语雀据此同步前端与已发布内容
 
 ### 9. 删除文档
 
@@ -326,6 +330,18 @@ python {skill_dir}/scripts/yuque_client.py export-md <doc_id> <book_id> --output
 - **适用场景**：把语雀文档同步到本地仓库 / Git / 其他平台
 
 > ⚠️ 导出结果会保留 `<font style="color:...">` 等语雀样式标签；如需纯净版，可自行清洗掉。
+
+### 15. Markdown 转 ASL（回写文档必须用它）
+
+```bash
+python {skill_dir}/scripts/yuque_client.py md2asl --input-file content.md --output-file body.asl.html
+```
+
+将 Markdown 转为语雀 **ASL 格式**（编辑器真实存储格式，每个元素带 `data-lake-id`）。
+
+- 与 `md2lake`（HTML）的区别：**ASL 是语雀编辑器的原生格式，回写时不会破坏折叠块 / 画板等复杂结构**
+- 支持：标题、段落、引用块、有序 / 无序列表、加粗、行内代码
+- 典型用法：`md2asl` 生成 ASL → `update-doc --asl-file` 或 `replace-section --body-file` 提交
 
 ### 全局参数
 

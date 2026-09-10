@@ -128,8 +128,8 @@ Content-Type: application/json
 ```json
 {
   "format": "lake",
-  "body_asl": "<html内容>",
-  "body_draft_asl": "<html内容>",
+  "body_asl": "<ASL内容>",
+  "body_draft_asl": "<ASL内容>",
   "save_type": "user",
   "draft_version": <number>
 }
@@ -137,14 +137,29 @@ Content-Type: application/json
 
 **必需字段**:
 - `format` - 固定为 `"lake"`
-- `body_asl` - 文档内容（HTML 格式）
+- `body_asl` - 文档内容，**必须是 ASL 格式**（不是 HTML！见下方说明）
 - `save_type` - `"user"`（手动保存）或 `"auto"`（自动保存）
 - `draft_version` - 当前草稿版本号，需先通过 `GET /api/docs/:id?mode=edit` 获取
 
 **可选字段**:
 - `body_draft_asl` - 草稿内容（通常与 body_asl 一致）
 
-**注意**: 此接口更新 `body_draft`，语雀前端立即可见。配合 `PUT /api/docs/:id` 更新 `body` 可确保完整更新。
+> ⚠️ **body_asl ≠ HTML（踩坑记录）**
+>
+> 语雀文档有两套内容字段，格式完全不同：
+>
+> | 字段 | 格式 | 特征 |
+> |------|------|------|
+> | `body` / `body_draft` | HTML | `class="ne-p"`、`class="ne-text"` |
+> | `body_asl` / `body_draft_asl` | **ASL** | 每个元素带 `data-lake-id="uXXXX"` |
+>
+> 如果把 `body`（HTML）直接塞进 `body_asl` 提交，语雀会按 ASL 语法容错解析，导致：
+> - 折叠块 `<details class="lake-collapse"><summary></summary><p>内容</p></details>` 被改写成 `<details><summary>内容</summary></details>` —— **summary 被填满，视觉上从「折叠」变「展开」**
+> - 其他复杂结构（画板、PlantUML 等）也可能变形
+>
+> **正确做法**：用 `md2asl` 生成 ASL，或取 `body_asl` 原样做局部替换后再提交。
+
+**注意**: 此接口更新 `body_asl` / `body_draft_asl`，语雀会据此同步前端与已发布内容。
 
 ### DELETE /api/docs/{doc_id}
 删除文档。
