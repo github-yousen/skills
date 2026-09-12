@@ -1,0 +1,10 @@
+{
+  "name": "fanqienovel-skill",
+  "version": "1.0.0",
+  "description": "番茄小说作者后台操作技能依赖",
+  "private": true,
+  "dependencies": {
+    "crypto-js": "^4.2.0",
+    "bignumber.js": "^9.1.2"
+  }
+}
