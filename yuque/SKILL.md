@@ -69,6 +69,8 @@ description: |
 11. **表格/画板文档限制**：`format` 为 `lakesheet`（表格）或 `lakeboard`（画板）的文档，`body` 通过本 API 返回为空，无法用 `get-doc` / `get-doc-outline` / `replace-section` 读写正文。遇到此类文档应直接告知用户该限制，`resolve-url` 会用 `is_sheet` / `is_board` 标记出来。
 12. **备份 / 同步整篇文档**：优先用 `export-md`（语雀官方导出接口），保真度远高于 `get-doc` + 自行转换 lake HTML。
 13. **回写文档必须用 ASL**：`PUT /api/docs/:id/content` 的 `body_asl` 字段要的是 **ASL 格式**（带 `data-lake-id`），不是 HTML。传 HTML 会被容错解析，**把折叠块 `<details>` 的 `<summary>` 填满内容（视觉上变"展开"）**。用 `md2asl` 生成 ASL，或直接让 `replace-section` 基于 ASL 操作（默认已是）。
+14. **回滚版本先确认**：`restore-version` 是写操作。执行前必须先向用户确认「文档 + 目标版本（时间/标题）」，并说明回滚会生成新版本、可再次回滚。用户没明确要求时不要主动回滚。
+15. **查历史版本用 `get-doc-versions`**：想了解文档改动轨迹、找回旧内容时，先列版本再按需 `get-doc-version` / `diff-versions`，不要靠 `export-md` 反复导当前版猜历史。
 
 ---
 
@@ -198,11 +200,53 @@ python {skill_dir}/scripts/yuque_client.py delete-doc <doc_id> <book_id>
 
 **谨慎操作**，删除后文档进入回收站。
 
-### 10. 获取文档版本历史
+### 10. 历史版本（列表 / 查看 / 对比 / 回滚）
+
+**10.1 版本列表**（按时间倒序，最新在最前）：
 
 ```bash
-python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
+python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id> [limit] [offset]
 ```
+
+- `limit` - 每页数量，默认 200；`offset` - 偏移量，默认 0
+- 返回 `count` + `versions[]`，每条含 `id`（version_id）、`title`、`created_at`、`author`、`draft`、`isReleased`
+
+**10.2 查看某个版本的内容**：
+
+```bash
+# 只看元数据（不输出正文，避免撑爆终端）
+python {skill_dir}/scripts/yuque_client.py get-doc-version <doc_id> <version_id>
+
+# 导出正文到文件（推荐，ASL 原文）
+python {skill_dir}/scripts/yuque_client.py get-doc-version <doc_id> <version_id> --output-file old.asl.html
+
+# 打印正文到 stdout / 导出渲染后的 HTML
+python {skill_dir}/scripts/yuque_client.py get-doc-version <doc_id> <version_id> --body-only
+python {skill_dir}/scripts/yuque_client.py get-doc-version <doc_id> <version_id> --format html --output-file old.html
+```
+
+- `--format asl`（默认）：语雀 ASL 原文，**与文档 `body_asl` 完全同构，可直接回写**
+- `--format html`：渲染后的 HTML，适合阅读或转 Markdown
+- 正文较大时务必用 `--output-file`，不要直接打印
+
+**10.3 对比两个版本的差异**：
+
+```bash
+python {skill_dir}/scripts/yuque_client.py diff-versions <doc_id> <version_id_1> <version_id_2> [--format asl|html]
+```
+
+输出 unified diff 文本（块级纯文本对比，已剥离标签），适合快速回答“这版改了什么”。加 `--output-file` 可写入文件。
+
+**10.4 回滚到指定版本**：
+
+```bash
+python {skill_dir}/scripts/yuque_client.py restore-version <doc_id> <book_id> <version_id> [--with-title]
+```
+
+- 实现方式：取该版本 ASL 原文 → 经 `/api/docs/:id/content` 写回，等价于一次普通保存
+- **非破坏性**：回滚本身会生成一个新版本，可再次回滚回去
+- `--with-title` 同时把标题恢复为该版本标题（默认只恢复正文）
+- ⚠️ 属于写操作，**执行前必须向用户确认目标文档与目标版本**（见 Agent 执行规范第 14 条）
 
 ---
 
@@ -259,6 +303,21 @@ python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
 2. 根据搜索结果判断是否需要继续读取详情
 ```
 
+### 工作流6：查看改动轨迹 / 回滚到历史版本
+
+```
+1. get-doc-versions <doc_id> → 列出全部版本（id / 时间 / 作者）
+2. diff-versions <doc_id> <v1> <v2> → 看两个版本之间改了什么
+3. get-doc-version <doc_id> <version_id> --output-file old.asl.html → 导出某版正文
+4. 向用户确认「要回滚到哪个版本」→ restore-version <doc_id> <book_id> <version_id>
+5. get-doc <doc_id> <book_id> edit → 校验回滚结果
+```
+
+**常见诉求对应**：
+- “这篇文档最近改了什么” → `get-doc-versions` + `diff-versions`（最新版 vs 上一版）
+- “帮我找回之前删掉的那段” → `diff-versions` 定位 → `get-doc-version --format html` 取旧文 → 用 `update-doc` / `replace-section` 只补回那段（比整篇回滚更安全）
+- “整篇恢复到某天的状态” → `restore-version`
+
 ---
 
 ## 重要注意事项
@@ -273,6 +332,7 @@ python {skill_dir}/scripts/yuque_client.py get-doc-versions <doc_id>
 8. **body vs body_draft** - 语雀有两套存储：`body`（已发布内容）和 `body_draft`（编辑器草稿）。前端渲染优先用 `body_draft`。本脚本的 `update-doc` 和 `replace-section` 已自动同步两者
 9. **长内容用 --body-file** - 命令行参数有长度限制（Windows ~8000字节），长文档内容应先写入临时文件，用 `--body-file /path/to/file.html` 传入
 10. **优先局部编辑** - 修改长文档时优先使用 `get-doc-outline` + `replace-section`，降低误覆盖整篇文档的风险
+11. **空行会被物化成可见空行** - markdown 的空行在语雀里是真实空段落（渲染成空行）。`md2asl` 默认折叠引用块内的语法空行，保证 pull → push 往返稳定；详见「空行陷阱」一节。发现文档「间隔莫名变大」时，先用 `diff-versions` 对比历史版本的空段落数，而不是怀疑渲染
 
 ---
 
@@ -342,6 +402,29 @@ python {skill_dir}/scripts/yuque_client.py md2asl --input-file content.md --outp
 - 与 `md2lake`（HTML）的区别：**ASL 是语雀编辑器的原生格式，回写时不会破坏折叠块 / 画板等复杂结构**
 - 支持：标题、段落、**表格**、引用块、有序 / 无序列表、加粗、行内代码
 - 典型用法：`md2asl` 生成 ASL → `update-doc --asl-file` 或 `replace-section --body-file` 提交
+- **默认折叠引用块内的语法空行**（见下方「空行陷阱」），需要字面保留时加 `--keep-blank`
+
+#### ⚠️ 空行陷阱：markdown 空行 ≠ 语雀空段落
+
+同一个空行在两边含义完全不同：
+
+| | markdown | 语雀 lake / ASL |
+|---|---|---|
+| 空行 | 语法分隔符，**渲染不出空行** | 空段落 `<p><br></p>`，**渲染成一个可见空行** |
+
+所以「md → 语雀」如果 1:1 搬运空行，正文就会出现大段空白。更麻烦的是**导出侧（export-md）也会给引用块内的列表补空行**（列表前补 2 个、列表项之间各补 1 个），于是：
+
+```
+pull（导出补空行）→ push（旧逻辑原样物化）→ 间隔越来越大，且不会自动收敛
+```
+
+`md2asl` 默认按下面的规则折叠，保证 **pull → push 往返稳定**：
+
+1. 连续空行 → 最多 1 个空段落
+2. 列表项之间的空行 → 丢弃（markdown 列表的常规写法，不该产生视觉间隔）
+3. 引用块开头 / 末尾的空行 → 丢弃
+
+需要逐字保留空行（旧行为）时用 `--keep-blank`。
 
 ### 全局参数
 

@@ -216,10 +216,36 @@ Content-Type: application/json
 
 ## 五、文档版本
 
-### GET /api/doc_versions?doc_id={doc_id}
-获取文档版本历史。
+### GET /api/doc_versions?doc_id={doc_id}&doc_type=Doc&offset={n}&limit={n}
+获取文档版本历史（按时间倒序，最新版本在最前）。
 
-**响应字段**: id, doc_id, title, user_id, draft, created_at, isReleased, origin, name, publication_status
+**参数**:
+- `doc_id` - 文档 ID（数字，必传）
+- `doc_type` - 固定 `Doc`
+- `offset` / `limit` - 分页，`limit=200` 可一次取全（实测某文档 30 个版本全量返回）
+
+**响应字段**: id, doc_id, title, user_id, user{login,name,avatar}, draft, created_at, name, origin, isReleased, publication_status
+
+**实测**（2026-09）：未带分页参数时同样返回全部版本；`user.login` 即作者登录名。
+
+### GET /api/doc_versions/{version_id}?doc_id={doc_id}
+获取单个历史版本的完整内容。
+
+**响应 `data` 字段**:
+- `id` / `doc_id` / `doc_type` / `format` / `originFormat` / `slug` / `title` / `user_id` / `user`
+- **`content`** - 语雀 ASL 原文（`<!doctype lake><meta name="doc-version" ...>` 开头）
+- **`content_html`** - 渲染后的 HTML（`<div class="lake-content">` 包裹）
+- `created_at` / `word_count` / `draft` / `marked` / `origin` / `doc_dynamic_data`
+
+**关键结论（已实测验证）**：版本 `content` 与文档 `GET /api/docs/:id?mode=edit` 返回的 `body_asl` **完全同构**（同一文档同一版本两者字符串相等）。
+因此 **回滚 = 取版本 `content` → 经 `PUT /api/docs/:id/content` 写回 `body_asl` / `body_draft_asl`**，无需额外的还原接口，且回滚本身会生成新版本（可逆）。
+
+**限制**: 表格（`lakesheet`）/ 画板（`lakeboard`）文档无正文，`content` 为空。
+
+### PUT /api/docs/{doc_id}/lock  body: {"uuid":"..."}
+前端进入「历史版本 / diff」视图时锁定文档，防止他人并发编辑。
+
+**说明**: 这是 UI 行为，**本 skill 的版本读写不需要调用它**（`restore-version` 直接走 content 接口，与 `update-doc` 同一条已验证链路）。如需锁定，`uuid` 取自编辑器当前会话。
 
 ---
 
