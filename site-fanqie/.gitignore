@@ -1,0 +1,12 @@
+# 本地凭证文件，禁止提交
+fanqienovel_auth.json
+.env
+*.local
+
+# 运行时产物
+publish_result.json
+node_modules/
+
+# Python 运行产物
+__pycache__/
+*.pyc
