@@ -2,3 +2,7 @@
 credentials.json
 .env
 *.local
+
+# Python 运行产物
+__pycache__/
+*.pyc

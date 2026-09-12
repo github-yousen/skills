@@ -14,11 +14,14 @@
 #   delete-doc <doc_id> <book_id> - 删除文档
 #   search <keyword> [type]       - 搜索(type=doc/book)
 #   move-doc <doc_id> <book_id> <target_book_id> - 移动文档
-#   get-doc-versions <doc_id>     - 获取文档版本列表
+#   get-doc-versions <doc_id> [limit] [offset]   - 获取文档版本列表
+#   get-doc-version <doc_id> <version_id> [--format asl|html] - 获取历史版本内容
+#   diff-versions <doc_id> <version_id_1> <version_id_2>      - 对比两个历史版本的正文差异
+#   restore-version <doc_id> <book_id> <version_id> [--with-title] - 回滚到指定历史版本
 #   get-doc-outline <doc_id> <book_id>           - 获取文档标题层级结构
 #   replace-section <doc_id> <book_id> --heading <text> --body-file <path> - 替换指定section
 #   md2lake [text] [--input-file <path>]         - Markdown 转 lake HTML
-#   md2asl [text] [--input-file <path>]          - Markdown 转语雀 ASL（编辑器格式，保结构）
+#   md2asl [text] [--input-file <path>] [--keep-blank] - Markdown 转语雀 ASL（默认折叠引用块内空行）
 #   export-md <doc_id> <book_id>                 - 导出文档为语雀原生 Markdown（保真）
 #
 # 全局参数（可用于任何命令）:
@@ -36,6 +39,7 @@ import json
 import os
 import sys
 import re
+import difflib
 from datetime import datetime
 
 SSL_CTX = ssl.create_default_context()
@@ -470,22 +474,141 @@ def cmd_search(cookie, csrf_token, x_login, keyword, search_type='doc'):
     return {'total': data.get('totalHits', len(result)), 'hits': result}
 
 
-def cmd_get_doc_versions(cookie, csrf_token, x_login, doc_id):
-    r = api_request('GET', '/api/doc_versions', params={'doc_id': doc_id},
+def cmd_get_doc_versions(cookie, csrf_token, x_login, doc_id, limit=200, offset=0):
+    """获取文档版本历史列表（按时间倒序，最新版本在最前）。"""
+    r = api_request('GET', '/api/doc_versions',
+                    params={'doc_id': doc_id, 'doc_type': 'Doc', 'offset': offset, 'limit': limit},
                     cookie=cookie, csrf_token=csrf_token, x_login=x_login)
     if '_error' in r:
         return r
     versions = r.get('data', [])
     result = []
     for v in versions:
+        user = v.get('user') or {}
         result.append({
             'id': v.get('id'),
             'title': v.get('title'),
-            'draft': v.get('draft'),
             'created_at': v.get('created_at'),
+            'author': user.get('login') or v.get('user_id'),
+            'draft': v.get('draft'),
             'isReleased': v.get('isReleased'),
         })
-    return result
+    return {'count': len(result), 'offset': offset, 'versions': result}
+
+
+def cmd_get_doc_version(cookie, csrf_token, x_login, doc_id, version_id, fmt='asl'):
+    """获取单个历史版本的详情。
+
+    fmt='asl'  : 返回 content 字段（语雀 ASL 原文，可直接回写，见 restore-version）
+    fmt='html' : 返回 content_html 字段（渲染后的 HTML，适合阅读 / 转 Markdown）
+
+    返回中的 `_content` 为正文，其余为元数据（由 main 决定写文件还是打印）。
+    """
+    r = api_request('GET', f'/api/doc_versions/{version_id}', params={'doc_id': doc_id},
+                    cookie=cookie, csrf_token=csrf_token, x_login=x_login)
+    if '_error' in r:
+        return r
+    v = r.get('data', {})
+    if not isinstance(v, dict) or not v:
+        return {'_error': f'未找到版本 {version_id}（请确认 version_id 与 doc_id 是否匹配）'}
+    user = v.get('user') or {}
+    content = v.get('content_html' if fmt == 'html' else 'content', '') or ''
+    return {
+        '_content': content,
+        'id': v.get('id'),
+        'doc_id': v.get('doc_id'),
+        'title': v.get('title'),
+        'created_at': v.get('created_at'),
+        'author': user.get('login') or v.get('user_id'),
+        'word_count': v.get('word_count'),
+        'doc_format': v.get('format'),
+        'slug': v.get('slug'),
+        'chars': len(content),
+    }
+
+
+def _blocks_to_text(lake_body):
+    """把 lake ASL / HTML 拆成块级纯文本行，用于版本 diff。
+
+    去掉文档头 meta，按块级标签断行，剥离标签与实体，丢掉空行。
+    """
+    import html as _html
+    s = lake_body or ''
+    s = re.sub(r'<!doctype[^>]*>', '', s, flags=re.I)
+    s = re.sub(r'<meta[^>]*>', '', s, flags=re.I)
+    s = re.sub(r'<br\s*/?>', '\n', s, flags=re.I)
+    s = re.sub(r'</(p|h[1-6]|li|tr|div|blockquote|pre|td|th|section)>', '\n', s, flags=re.I)
+    s = re.sub(r'<[^>]+>', '', s)
+    s = _html.unescape(s)
+    return [ln.strip() for ln in s.split('\n') if ln.strip()]
+
+
+def cmd_diff_versions(cookie, csrf_token, x_login, doc_id, version_id_1, version_id_2, fmt='asl'):
+    """对比两个历史版本的正文差异，输出 unified diff 文本。
+
+    对比的是块级纯文本（已剥离标签），适合快速看“改了什么”，
+    不做逐字符的富文本 diff。
+    """
+    a = cmd_get_doc_version(cookie, csrf_token, x_login, doc_id, version_id_1, fmt)
+    if '_error' in a:
+        return {'_error': f'版本 {version_id_1} 获取失败', '_detail': a}
+    b = cmd_get_doc_version(cookie, csrf_token, x_login, doc_id, version_id_2, fmt)
+    if '_error' in b:
+        return {'_error': f'版本 {version_id_2} 获取失败', '_detail': b}
+
+    lines_a = _blocks_to_text(a['_content'])
+    lines_b = _blocks_to_text(b['_content'])
+    diff = list(difflib.unified_diff(
+        lines_a, lines_b,
+        fromfile=f'v{version_id_1} ({a.get("created_at")})',
+        tofile=f'v{version_id_2} ({b.get("created_at")})',
+        lineterm='', n=2,
+    ))
+    if not diff:
+        return {'_diff': '', 'identical': True,
+                'from': version_id_1, 'to': version_id_2,
+                'lines': {'from': len(lines_a), 'to': len(lines_b)}}
+    changed = sum(1 for ln in diff if ln.startswith(('+', '-')) and not ln.startswith(('+++', '---')))
+    return {'_diff': '\n'.join(diff), 'identical': False,
+            'from': version_id_1, 'to': version_id_2,
+            'changed_lines': changed,
+            'lines': {'from': len(lines_a), 'to': len(lines_b)}}
+
+
+def cmd_restore_doc_version(cookie, csrf_token, x_login, doc_id, book_id, version_id, with_title=False):
+    """回滚文档到指定历史版本（客户端回滚）。
+
+    实现方式：取该版本的 `content`（ASL 原文，已确认与文档 body_asl 同构），
+    通过 /api/docs/:id/content 写回，等价于一次普通保存。
+
+    - 非破坏性：回滚本身也会生成一个新版本，可再次回滚回去
+    - with_title=True 时同时把标题恢复为该版本标题
+    """
+    ver = cmd_get_doc_version(cookie, csrf_token, x_login, doc_id, version_id, fmt='asl')
+    if '_error' in ver:
+        return ver
+    content = ver.get('_content', '')
+    if not content:
+        return {'_error': '该版本正文为空，无法回滚（表格 lakesheet / 画板 lakeboard 文档不支持）'}
+
+    upd = cmd_update_doc(cookie, csrf_token, x_login, doc_id, book_id,
+                         title=(ver.get('title') if with_title else None),
+                         body=None, body_asl=content)
+    if isinstance(upd, dict) and upd.get('_error'):
+        return {'_error': '回滚写入失败', '_detail': upd}
+
+    return {
+        'restored': True,
+        'doc_id': doc_id,
+        'from_version': version_id,
+        'version_created_at': ver.get('created_at'),
+        'version_title': ver.get('title'),
+        'word_count': ver.get('word_count'),
+        'chars': len(content),
+        'title_restored': bool(with_title),
+        'write_result': upd,
+        'note': '回滚已生成新版本，可再次回滚到回滚前的版本',
+    }
 
 
 def _strip_tags(html):
@@ -839,10 +962,45 @@ def _asl_inline(text):
     return ''.join(out) if out else '<br>'
 
 
-def md2asl(md_text):
+def _normalize_quote_lines(quotes):
+    """规范化引用块内的空行，避免 markdown 的语法空行变成可见空段落。
+
+    markdown 里空行只是分隔符（渲染不出空行），语雀里空段落是真实内容（渲染成空行）。
+    默认做三件事：
+    1. 连续空行折叠为最多 1 个空段落
+    2. 列表项之间的空行丢弃（markdown 列表的常规写法，不应产生视觉间隔）
+    3. 引用块开头 / 末尾的空行丢弃
+    """
+    def is_item(s):
+        return bool(re.match(r'^(\d+\.|[-*+])\s+', (s or '').strip()))
+
+    out = []
+    for idx, q in enumerate(quotes):
+        if q.strip():
+            out.append(q)
+            continue
+        nxt = next((x for x in quotes[idx + 1:] if x.strip()), None)
+        if nxt is None:                      # 末尾空行
+            continue
+        prev = out[-1] if out else None
+        if prev is None:                     # 开头空行
+            continue
+        if not prev.strip():                 # 连续空行
+            continue
+        if is_item(prev) and is_item(nxt):   # 列表项之间
+            continue
+        out.append('')
+    return out
+
+
+def md2asl(md_text, keep_blank=False):
     """将 Markdown 转换为语雀 ASL 格式（编辑器真实存储格式，含 data-lake-id）。
 
     与 md2lake 的区别：ASL 是语雀编辑器的原生格式，用它提交能**保持折叠块等复杂结构不被破坏**。
+
+    keep_blank=False（默认）：引用块内的语法空行会被折叠（连续空行→1 个、列表项之间→0 个、
+    首尾→0 个），避免 markdown 空行被物化成可见空段落导致「间隔变大」。
+    keep_blank=True：完全按字面保留每个空行（旧行为）。
     """
     lines = md_text.split('\n')
     parts = []
@@ -920,7 +1078,7 @@ def md2asl(md_text):
                 i += 1
             bid = _lid()
             inner = []
-            for q in quotes:
+            for q in (quotes if keep_blank else _normalize_quote_lines(quotes)):
                 pid = _lid()
                 inner.append(f'<p data-lake-id="{pid}" id="{pid}">'
                              + (_asl_inline(q) if q.strip() else '<br>') + '</p>')
@@ -1038,7 +1196,8 @@ def main():
     if len(sys.argv) < 2:
         print('用法: python yuque_client.py <command> [args...]')
         print('命令: whoami, list-books, list-docs, find-docs, get-doc, get-toc, create-doc, update-doc,')
-        print('      delete-doc, search, get-doc-versions, get-doc-outline, replace-section, md2lake, md2asl, export-md')
+        print('      delete-doc, search, get-doc-outline, replace-section, md2lake, md2asl, export-md,')
+        print('      get-doc-versions, get-doc-version, diff-versions, restore-version')
 
         print('全局参数: --output-file <path>, --body-only')
         sys.exit(1)
@@ -1155,7 +1314,64 @@ def main():
         result = cmd_search(cookie, csrf_token, x_login, keyword, search_type)
     elif command == 'get-doc-versions':
         doc_id = int(cmd_args[0])
-        result = cmd_get_doc_versions(cookie, csrf_token, x_login, doc_id)
+        limit = int(cmd_args[1]) if len(cmd_args) > 1 else 200
+        offset = int(cmd_args[2]) if len(cmd_args) > 2 else 0
+        result = cmd_get_doc_versions(cookie, csrf_token, x_login, doc_id, limit, offset)
+    elif command == 'get-doc-version':
+        doc_id = cmd_args[0]
+        version_id = cmd_args[1]
+        fmt = 'asl'
+        j = 2
+        while j < len(cmd_args):
+            if cmd_args[j] == '--format' and j + 1 < len(cmd_args):
+                fmt = cmd_args[j + 1].lower()
+                j += 2
+            else:
+                j += 1
+        if fmt not in ('asl', 'html'):
+            print('错误: --format 只支持 asl（默认）或 html')
+            sys.exit(1)
+        result = cmd_get_doc_version(cookie, csrf_token, x_login, doc_id, version_id, fmt)
+        if isinstance(result, dict) and '_content' in result:
+            content = result.pop('_content')
+            if output_file:
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(content)
+                print(f'{fmt.upper()} content written to: {output_file} ({len(content)} chars)')
+                return
+            if body_only:
+                sys.stdout.buffer.write(content.encode('utf-8'))
+                sys.stdout.buffer.write(b'\n')
+                return
+            # 未指定输出方式时只打印元数据，避免正文撑爆终端
+            result['_hint'] = '正文未输出：加 --body-only 打印，或 --output-file <path> 写入文件'
+    elif command == 'diff-versions':
+        doc_id = cmd_args[0]
+        version_id_1 = cmd_args[1]
+        version_id_2 = cmd_args[2]
+        fmt = 'asl'
+        if len(cmd_args) > 4 and cmd_args[3] == '--format':
+            fmt = cmd_args[4].lower()
+        result = cmd_diff_versions(cookie, csrf_token, x_login, doc_id, version_id_1, version_id_2, fmt)
+        if isinstance(result, dict) and '_diff' in result:
+            diff_text = result.pop('_diff')
+            if not diff_text:
+                print(f'两个版本正文一致（v{version_id_1} vs v{version_id_2}，各 {result["lines"]["from"]} 行）')
+            elif output_file:
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write(diff_text)
+                print(f'Diff written to: {output_file} ({len(diff_text)} chars, '
+                      f'{result.get("changed_lines", 0)} 行变更)')
+            else:
+                sys.stdout.buffer.write(diff_text.encode('utf-8'))
+                sys.stdout.buffer.write(b'\n')
+            return
+    elif command == 'restore-version':
+        doc_id = cmd_args[0]
+        book_id = int(cmd_args[1])
+        version_id = cmd_args[2]
+        with_title = '--with-title' in cmd_args[3:]
+        result = cmd_restore_doc_version(cookie, csrf_token, x_login, doc_id, book_id, version_id, with_title)
     elif command == 'get-doc-outline':
         doc_id = cmd_args[0]
         book_id = int(cmd_args[1])
@@ -1194,12 +1410,15 @@ def main():
         result = cmd_replace_section(cookie, csrf_token, x_login, doc_id, book_id, heading_text, new_content)
     elif command in ('md2lake', 'md2asl'):
         md_text = None
+        keep_blank = '--keep-blank' in cmd_args
         j = 0
         while j < len(cmd_args):
             if cmd_args[j] == '--input-file' and j + 1 < len(cmd_args):
                 with open(cmd_args[j + 1], 'r', encoding='utf-8') as f:
                     md_text = f.read()
                 j += 2
+            elif cmd_args[j] in ('--keep-blank', '--input-file'):
+                j += 1
             elif md_text is None:
                 md_text = cmd_args[j].replace('\\n', '\n')
                 j += 1
@@ -1208,7 +1427,7 @@ def main():
         if md_text is None:
             # 从 stdin 读取
             md_text = sys.stdin.read()
-        out_text = md2asl(md_text) if command == 'md2asl' else md2lake(md_text)
+        out_text = md2asl(md_text, keep_blank=keep_blank) if command == 'md2asl' else md2lake(md_text)
         label = 'ASL' if command == 'md2asl' else 'Lake HTML'
         if output_file:
             with open(output_file, 'w', encoding='utf-8') as f:
