@@ -1,5 +1,0 @@
-templates/test-*.json
-__pycache__/
-*.pyc
-*.bak
-node_modules/
