@@ -1,0 +1,66 @@
+{
+  "format": 1,
+  "title": {
+    "en": "Yousen DSH plugins",
+    "zh": "Yousen 的 DSH 插件"
+  },
+  "description": {
+    "en": "A self-hosted format-1 index containing the 小说模式 (Novel Mode) plugin.",
+    "zh": "自托管的 format-1 索引，收录「小说模式」插件。"
+  },
+  "metadata": {
+    "categories": {
+      "workflow": {
+        "title": {
+          "en": "Workflow & Automation",
+          "zh": "工作流与自动化"
+        }
+      }
+    },
+    "labels": {},
+    "sortKeys": {}
+  },
+  "plugins": [
+    {
+      "name": "@yousen/dsh-novel-mode",
+      "title": {
+        "en": "Novel mode",
+        "zh": "小说模式（Novel Mode）"
+      },
+      "description": {
+        "en": "From one idea to a finished, consistency-checked novel: a deterministic writing ENGINE for DeepSeek Harness, not a prompt pack. A JavaScript state machine owns 7 script-gated stages plus a 15-step serial per-chapter sub-FSM; PowerShell validators decide every gate, versioned atomic checkpoints resume at the exact chapter, 9 subagent workers are evidence-adjudicated in code, and the user sees only quiet structured status with zero prompt dumps, leaked errors or bundled credentials.",
+        "zh": "一个想法到一本校验通过的小说：DeepSeek Harness 的确定性写作引擎，不是提示词包。JavaScript 状态机掌握 7 个脚本硬门禁阶段与 15 步串行单章子状态机，版本化原子断点精确续写，9 个子代理由代码按证据裁决，用户只看到安静的结构化状态：无提示词、无错误外泄、零内置凭据。"
+      },
+      "homepage": "https://github.com/github-yousen/dsh-novel-mode",
+      "repository": {
+        "url": "https://github.com/github-yousen/dsh-novel-mode"
+      },
+      "metadata": {
+        "category": "workflow",
+        "keywords": [
+          "novel",
+          "writing",
+          "workflow",
+          "小说",
+          "网文"
+        ],
+        "labels": [],
+        "sortKeys": {}
+      },
+      "versions": [
+        {
+          "version": "2.0.0",
+          "publishTimestamp": 1794243463,
+          "source": {
+            "type": "git",
+            "url": "https://github.com/github-yousen/dsh-novel-mode",
+            "commit": "1551a1a367bad29b0fde004853db79627142b02a"
+          },
+          "engines": {
+            "dsh": ">=0.2.0-rc.1 <0.2.0 || >=0.2.1-rc.1 <0.3.0-0"
+          }
+        }
+      ]
+    }
+  ]
+}
