@@ -49,12 +49,12 @@
       },
       "versions": [
         {
-          "version": "0.2.0",
-          "publishTimestamp": 1794399445,
+          "version": "0.3.0",
+          "publishTimestamp": 1794415654,
           "source": {
             "type": "git",
             "url": "https://github.com/github-yousen/dsh-novel-mode",
-            "commit": "dad64143bbf78d71a70e742c2a3e28408194778d"
+            "commit": "772bfd179279b8e83ecefe90ccca37a26ed8eaab"
           },
           "engines": {
             "dsh": ">=0.2.0-rc.1 <0.2.0 || >=0.2.1-rc.1 <0.3.0-0"
